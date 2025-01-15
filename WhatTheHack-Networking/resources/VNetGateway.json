@@ -1,0 +1,222 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "hubVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Hub Virtual Network name"
+            },
+            "defaultValue": "hub-vnet"
+        },
+        "hubGatewayName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Hub Gateway"
+            },
+            "defaultValue": "hub-gw"
+        },
+        "hubGatewayIPName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Hub Gateway IP"
+            },
+            "defaultValue": "hub-gw-ip"
+        },
+        "onpremVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "OnPrem Virtual Network name"
+            },
+            "defaultValue": "onprem-vnet"
+        },
+        "onpremGatewayName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Onprem Gateway"
+            },
+            "defaultValue": "onprem-gw"
+        },
+        "onpremGatewayIPName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of OnPrem Gateway IP"
+            },
+            "defaultValue": "onprem-gw-ip"
+        },
+        "vpnsku": {
+            "type": "string",
+            "defaultValue": "VpnGw2"
+        },
+        "vpntype": {
+            "type": "string",
+            "defaultValue": "RouteBased"
+        },
+        "connectionProtocol": {
+            "type": "string",
+            "defaultValue": "IKEv2"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('hubGatewayIPName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2024-03-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubVnetName'))]"
+            ],
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Static"
+            },
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            }
+        },
+        {
+            "name": "[parameters('hubGatewayName')]",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubGatewayIPName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubVnetName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "vnetGatewayConfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubVnetName'), 'GatewaySubnet')]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubGatewayIPName'))]"
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "[parameters('vpnsku')]",
+                    "tier": "[parameters('vpnsku')]"
+                },
+                "vpnGatewayGeneration": "Generation2",
+                "gatewayType": "Vpn",
+                "vpnType": "[parameters('vpntype')]"
+            }
+        },
+        {
+            "name": "[parameters('onpremGatewayIPName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2024-03-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('onpremVnetName'))]"
+            ],
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Static"
+            },
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            }
+        },
+        {
+            "name": "[parameters('onpremGatewayName')]",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremGatewayIPName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('onpremVnetName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "vnetGatewayConfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('onpremVnetName'), 'GatewaySubnet')]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremGatewayIPName'))]"
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "[parameters('vpnsku')]",
+                    "tier": "[parameters('vpnsku')]"
+                },
+                "vpnGatewayGeneration": "Generation2",
+                "gatewayType": "Vpn",
+                "vpnType": "[parameters('vpntype')]"
+            }
+        },
+        {
+            "name": "hub-onprem-connection",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2024-07-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('hubGatewayName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('onpremGatewayName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "variables": {},
+                    "resources": [
+                        {
+                            "name": "[concat(parameters('hubGatewayName'), '-to-', parameters('onpremGatewayName'))]",
+                            "type": "Microsoft.Network/connections",
+                            "apiVersion": "2024-01-01",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "connectionType": "Vnet2Vnet",
+                                "virtualNetworkGateway1": {
+                                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('hubGatewayName'))]"
+                                },
+                                "useLocalAzureIpAddress": false,
+                                "enableBgp": false,
+                                "connectionProtocol": "[parameters('connectionProtocol')]",
+                                "authenticationType": "PSK",
+                                "SharedKey": "Winadmin1234",
+                                "virtualNetworkGateway2": {
+                                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('onpremGatewayName'))]"
+                                }
+                            }
+                        },
+                        {
+                            "name": "[concat(parameters('onpremGatewayName'), '-to-', parameters('hubGatewayName'))]",
+                            "type": "Microsoft.Network/connections",
+                            "apiVersion": "2024-01-01",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "connectionType": "Vnet2Vnet",
+                                "virtualNetworkGateway1": {
+                                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('onpremGatewayName'))]"
+                                },
+                                "useLocalAzureIpAddress": false,
+                                "enableBgp": false,
+                                "connectionProtocol": "[parameters('connectionProtocol')]",
+                                "authenticationType": "PSK",
+                                "SharedKey": "Winadmin1234",
+                                "virtualNetworkGateway2": {
+                                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('hubGatewayName'))]"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

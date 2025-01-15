@@ -1,0 +1,304 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "hubVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "your Hub Virtual Network name"
+            },
+            "defaultValue": "hub-vnet"
+        },
+        "hubAddressPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Hub Virtual Network Address Prefix"
+            },
+            "defaultValue": "10.0.0.0/16"
+        },
+        "hubWorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Hub Workload Subnet"
+            },
+            "defaultValue": "hub-workload-subnet"
+        },
+        "hubNSG": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Hub Workload NSG"
+            },
+            "defaultValue": "nsg-1"
+        },
+        "onpremVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "On-Prem Virtual Network name"
+            },
+            "defaultValue": "onprem-vnet"
+        },
+        "onpremAddressPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Spoke1 Virtual Network Address Prefix"
+            },
+            "defaultValue": "172.16.0.0/16"
+        },
+        "onpremWorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of OnPrem Workload Subnet"
+            },
+            "defaultValue": "onprem-workload-subnet"
+        },
+        "onpremNSG": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of OnPrem Workload NSG"
+            },
+            "defaultValue": "nsg-0"
+        },
+        "spoke1VnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Spoke Virtual Network name"
+            },
+            "defaultValue": "spoke1-vnet"
+        },
+        "spoke1AddressPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Spoke1 Virtual Network Address Prefix"
+            },
+            "defaultValue": "10.1.0.0/16"
+        },
+        "spoke1WorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Spoke 1 Workload Subnet"
+            },
+            "defaultValue": "spoke1-workload-subnet"
+        },
+        "spoke1NSG": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Spoke 1 Workload NSG"
+            },
+            "defaultValue": "nsg-2"
+        },
+        "spoke2VnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Spoke Virtual Network name"
+            },
+            "defaultValue": "spoke2-vnet"
+        },
+        "spoke2AddressPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Spoke2 Virtual Network Address Prefix"
+            },
+            "defaultValue": "10.2.0.0/16"
+        },
+        "spoke2WorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Spoke 2 Workload Subnet"
+            },
+            "defaultValue": "spoke2-workload-subnet"
+        },
+        "spoke2NSG": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Spoke 2 Workload NSG"
+            },
+            "defaultValue": "nsg-3"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('hubVnetName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('hubAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "GatewaySubnet",
+                        "properties": {
+                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,0)]"
+                        }
+                    },
+                    {
+                        "name": "AzureFirewallSubnet",
+                        "properties": {
+                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,1)]"
+                        }
+                    },
+                    {
+                        "name": "AzureFirewallManagementSubnet",
+                        "properties": {
+                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,2)]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('hubWorkloadSubnet')]",
+                        "properties": {
+                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,10)]"
+                        }
+                    }
+
+                ]
+            }
+        },
+        {
+            "name": "[parameters('spoke1VnetName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('spoke1AddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('spoke1WorkloadSubnet')]",
+                        "properties": {
+                            "addressPrefix": "[cidrSubnet(parameters('spoke1AddressPrefix'),24,10)]"
+                        }
+                    }
+
+                ]
+            }
+        },
+        {
+            "name": "[parameters('spoke2VnetName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('spoke2AddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('spoke2WorkloadSubnet')]",
+                        "properties": {
+                            "addressPrefix": "[cidrSubnet(parameters('spoke2AddressPrefix'),24,10)]"
+                        }
+                    }
+
+                ]
+            }
+        },
+        {
+            "name": "[parameters('onpremVnetName')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('onpremAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "GatewaySubnet",
+                        "properties": {
+                            "addressPrefix": "[cidrSubnet(parameters('onpremAddressPrefix'),24,0)]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('onpremWorkloadSubnet')]",
+                        "properties": {
+                            "addressPrefix": "[cidrSubnet(parameters('onpremAddressPrefix'),24,10)]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "apply-nsgs-to-workload-subnets",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2024-07-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubVnetName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('onpremVnetName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('spoke1VnetName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('spoke2VnetName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "variables": {},
+                    "resources": [
+                        {
+                            "apiVersion": "2024-03-01",
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "name": "[concat(parameters('hubVnetName'), '/', parameters('hubWorkloadSubnet'))]",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,10)]",
+                                "networkSecurityGroup": {
+                                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('hubNSG'))]"
+                                }
+                            }
+                        },
+                        {
+                            "apiVersion": "2024-03-01",
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "name": "[concat(parameters('onpremVnetName'), '/', parameters('onpremWorkloadSubnet'))]",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "addressPrefix": "[cidrSubnet(parameters('onpremAddressPrefix'),24,10)]",
+                                "networkSecurityGroup": {
+                                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('onpremNSG'))]"
+                                }
+                            }
+                        },
+                        {
+                            "apiVersion": "2024-03-01",
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "name": "[concat(parameters('spoke1VnetName'), '/', parameters('spoke1WorkloadSubnet'))]",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "addressPrefix": "[cidrSubnet(parameters('spoke1AddressPrefix'),24,10)]",
+                                "networkSecurityGroup": {
+                                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('spoke1NSG'))]"
+                                }
+                            }
+                        },
+                        {
+                            "apiVersion": "2024-03-01",
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "name": "[concat(parameters('spoke2VnetName'), '/', parameters('spoke2WorkloadSubnet'))]",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "addressPrefix": "[cidrSubnet(parameters('spoke2AddressPrefix'),24,10)]",
+                                "networkSecurityGroup": {
+                                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('spoke2NSG'))]"
+                                }
+                            }
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
