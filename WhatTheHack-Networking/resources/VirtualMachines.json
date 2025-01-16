@@ -1,9 +1,169 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-    "parameters": {},
+    "parameters": {
+        "scriptURL": {
+            "type": "string",
+            "metadata": {
+                "description": "URL of the script to be executed"
+            },
+            "defaultValue": ""
+        },
+        "extensionName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the extension"
+            },
+            "defaultValue": "config-app"
+        },
+        "onpremVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "On-Prem Virtual Network name"
+            },
+            "defaultValue": "onprem-vnet"
+        },
+        "onpremWorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of OnPrem Workload Subnet"
+            },
+            "defaultValue": "onprem-workload-subnet"
+        },
+        "onpremVMNic": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of OnPrem VM NIC"
+            },
+            "defaultValue": "onprem-vm-nic"
+        },
+        "onpremVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of OnPrem VM"
+            },
+            "defaultValue": "onprem-vm"
+        },
+        "onpremVMIp": {
+            "type": "string",
+            "metadata": {
+                "description": "OnPrem VM Public IP name"
+            },
+            "defaultValue": "onprem-vm-ip"
+        }
+    },
     "functions": [],
     "variables": {},
-    "resources": [],
+    "resources": [
+        {
+            "name": "[parameters('onpremVMIp')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremVMIp'))]"
+            ],
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2024-03-01",
+            "name": "[parameters('onpremVMNic')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('onpremVnetName'), parameters('onpremWorkloadSubnet'))]"
+                            },
+                            "publicIPAddress": {
+                                "location": "[resourceGroup().location]",
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremVMIp'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('onpremVMNic'))]"
+            ],
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2024-07-01",
+            "name": "[parameters('onpremVMName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2ms"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('onpremVMName')]",
+                    "adminUsername": "winadmin",
+                    "adminPassword": "Winadmin1234"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2022-datacenter-g2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        },
+                        "diskSizeGB": 128,
+                        "deleteOption": "Delete"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('onpremVMNic'))]",
+                            "properties": {
+                                "deleteOption": "Delete"
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            }
+        },
+        {
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('onpremVMName'))]"
+            ],
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2024-07-01",
+            "name": "[format('{0}/{1}', parameters('onpremVMName'), parameters('extensionName'))]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.7",
+                "autoUpgradeMinorVersion": true,
+                "enableAutomaticUpgrade": true,
+                "settings": {
+                    "fileUris": [
+                       "[parameters('scriptURL')]"
+                    ]
+                },
+                "protectedSettings": {
+                    "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File IIS.ps1"
+                }
+            }
+        }
+    ],
     "outputs": {}
 }
