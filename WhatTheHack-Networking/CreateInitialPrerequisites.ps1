@@ -2,20 +2,23 @@ $user = whoami
 $user = $user + "@instructorwhizlabs.onmicrosoft.com"
 
 $rg = Get-AzResourceGroup -location eastus
-$kvname = "vmkv3002"
-$secretName = "winadmin"
-$pass = read-host -prompt "Enter password" -assecurestring
+$kvname = "vmkv3003"
+$adminName = "winadmin"
+$adminPass = read-host -prompt "Enter password" -assecurestring
 $container = "scripts"
 
 $kv = new-azkeyvault -name $kvname -resourcegroup $rg.resourceGroupName -location "East US" -sku "Standard"
 
-New-AzRoleAssignment -SignInName $user -RoleDefinitionName "Key Vault Secrets Officer" -Scope $kv.resourceId
 
-set-azkeyvaultsecret -vaultname $kvname -name $secretName -secretvalue $pass -Expires (Get-Date).AddHours(1)
+New-AzRoleAssignment -SignInName $user -RoleDefinitionName "Key Vault Administrator" -Scope $kv.resourceId
 
-$secret = Get-AzKeyVaultSecret -vaultname $kvname -Name $secretName
+Set-AzKeyVaultAccessPolicy -VaultName $kvname -UserPrincipalName $user -PermissionsToSecrets set, delete, get, list
 
-write-host $secret
+set-azkeyvaultsecret -vaultname $kvname -name $adminNameName -secretvalue $adminPass -Expires (Get-Date).AddHours(2)
+
+$adminName = Get-AzKeyVaultSecret -vaultname $kvname -Name $adminNameName
+
+write-host $adminName
 
 new-azstoragecontainer -name $container -context (get-azstorageaccount -resourcegroupname $rg.resourceGroupName -name "azstore3000").context
 

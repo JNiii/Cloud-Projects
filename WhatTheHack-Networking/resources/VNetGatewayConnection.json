@@ -1,0 +1,71 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {},
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "name": "hub-onprem-connection",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2024-07-01",
+            "properties": {
+                "expressionEvaluationOptions": {
+                    "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {},
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "name": "[concat(parameters('hubGatewayName'), '-to-', parameters('onpremGatewayName'))]",
+                            "type": "Microsoft.Network/connections",
+                            "apiVersion": "2024-01-01",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "connectionType": "Vnet2Vnet",
+                                "virtualNetworkGateway1": {
+                                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('hubGatewayName'))]"
+                                },
+                                "useLocalAzureIpAddress": false,
+                                "enableBgp": false,
+                                "connectionProtocol": "[parameters('connectionProtocol')]",
+                                "authenticationType": "PSK",
+                                "SharedKey": "[parameters()]",
+                                "virtualNetworkGateway2": {
+                                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('onpremGatewayName'))]"
+                                }
+                            }
+                        },
+                        {
+                            "name": "[concat(parameters('onpremGatewayName'), '-to-', parameters('hubGatewayName'))]",
+                            "type": "Microsoft.Network/connections",
+                            "apiVersion": "2024-01-01",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "connectionType": "Vnet2Vnet",
+                                "virtualNetworkGateway1": {
+                                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('onpremGatewayName'))]"
+                                },
+                                "useLocalAzureIpAddress": false,
+                                "enableBgp": false,
+                                "connectionProtocol": "[parameters('connectionProtocol')]",
+                                "authenticationType": "PSK",
+                                "SharedKey": "Winadmin1234",
+                                "virtualNetworkGateway2": {
+                                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('hubGatewayName'))]"
+                                }
+                            }
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

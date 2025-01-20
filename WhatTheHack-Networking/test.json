@@ -7,21 +7,28 @@
             "metadata": {
                 "description": "description"
             },
-            "defaultValue": "vmkv3002"
+            "defaultValue": "vmkv3003"
         },
-        "resourceType": {
+        "secretType": {
             "type": "string",
             "metadata": {
                 "description": "description"
             },
             "defaultValue": "Microsoft.KeyVault/vaults/secrets"
         },
-        "resourceName": {
+        "adminName": {
             "type": "string",
             "metadata": {
                 "description": "description"
             },
             "defaultValue": "winadmin"
+        },
+        "kvType": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "Microsoft.KeyVault/vaults"
         },
         "api": {
             "type": "string",
@@ -35,9 +42,13 @@
     "variables": {},
     "resources": [],
     "outputs": {
-        "resourceType": {
+        "secret": {
             "type": "Object",
-            "value": "[reference(resourceId(parameters('resourceType'),parameters('kvname'),parameters('resourceName')),parameters('api'), 'Full')]"
+            "value": "[reference(resourceId(parameters('secretType'),parameters('kvname'),parameters('adminName')),parameters('api'), 'Full')]"
+        },
+        "kv": {
+            "type": "Object",
+            "value": "[reference(resourceId(parameters('kvType'),parameters('kvname')),parameters('api'), 'Full')]"
         }
     }
 }
