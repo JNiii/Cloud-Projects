@@ -5,9 +5,8 @@ $vnetgw = "./VNetGateway.json"
 $vnetpeer = "./VNetPeering.json"
 $vm = "./VirtualMachines.json"
 
-#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $nsg
-#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnet
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vm
-
-#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetgw -AsJob
-#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetpeer -AsJob
+New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $nsg
+New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnet
+New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vm -asJob
+New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetgw
+New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetpeer

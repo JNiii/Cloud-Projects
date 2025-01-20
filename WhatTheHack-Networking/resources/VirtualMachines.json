@@ -6,8 +6,7 @@
             "type": "string",
             "metadata": {
                 "description": "URL of the script to be executed"
-            },
-            "defaultValue": ""
+            }
         },
         "extensionName": {
             "type": "string",
@@ -50,6 +49,90 @@
                 "description": "OnPrem VM Public IP name"
             },
             "defaultValue": "onprem-vm-ip"
+        },
+        "hubVMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Hub VM"
+            },
+            "defaultValue": "hub-vm"
+        },
+        "hubVMNic": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Hub VM NIC"
+            },
+            "defaultValue": "hub-vm-nic"
+        },
+        "hubVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Hub Virtual Network name"
+            },
+            "defaultValue": "hub-vnet"
+        },
+        "hubWorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Hub Workload Subnet"
+            },
+            "defaultValue": "hub-workload-subnet"
+        },
+        "spoke1VMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of spoke1 VM"
+            },
+            "defaultValue": "spoke1-vm"
+        },
+        "spoke1VMNic": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of spoke1 VM NIC"
+            },
+            "defaultValue": "spoke1-vm-nic"
+        },
+        "spoke1VnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "your spoke1 Virtual Network name"
+            },
+            "defaultValue": "spoke1-vnet"
+        },
+        "spoke1WorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of spoke1 Workload Subnet"
+            },
+            "defaultValue": "spoke1-workload-subnet"
+        },
+        "spoke2VMName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of spoke2 VM"
+            },
+            "defaultValue": "spoke2-vm"
+        },
+        "spoke2VMNic": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of spoke2 VM NIC"
+            },
+            "defaultValue": "spoke2-vm-nic"
+        },
+        "spoke2VnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "your spoke2 Virtual Network name"
+            },
+            "defaultValue": "spoke2-vnet"
+        },
+        "spoke2WorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of spoke2 Workload Subnet"
+            },
+            "defaultValue": "spoke2-workload-subnet"
         }
     },
     "functions": [],
@@ -141,22 +224,274 @@
             }
         },
         {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2024-03-01",
+            "name": "[parameters('hubVMNic')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubVnetName'), parameters('hubWorkloadSubnet'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
             "dependsOn": [
-                "[resourceId('Microsoft.Compute/virtualMachines', parameters('onpremVMName'))]"
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('hubVMNic'))]"
+            ],
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2024-07-01",
+            "name": "[parameters('hubVMName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2ms"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('hubVMName')]",
+                    "adminUsername": "winadmin",
+                    "adminPassword": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', 'winadmin'), '2023-07-01', 'Full').secret]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2022-datacenter-g2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        },
+                        "diskSizeGB": 128,
+                        "deleteOption": "Delete"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('hubVMNic'))]",
+                            "properties": {
+                                "deleteOption": "Delete"
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            }
+        },
+        {
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('hubVMName'))]"
             ],
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "apiVersion": "2024-07-01",
-            "name": "[format('{0}/{1}', parameters('onpremVMName'), parameters('extensionName'))]",
+            "name": "[format('{0}/{1}', parameters('hubVMName'), parameters('extensionName'))]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "publisher": "Microsoft.Compute",
                 "type": "CustomScriptExtension",
                 "typeHandlerVersion": "1.7",
                 "autoUpgradeMinorVersion": true,
-                "enableAutomaticUpgrade": true,
                 "settings": {
                     "fileUris": [
-                       "[parameters('scriptURL')]"
+                        "[parameters('scriptURL')]"
+                    ]
+                },
+                "protectedSettings": {
+                    "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File IIS.ps1"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2024-03-01",
+            "name": "[parameters('spoke1VMNic')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spoke1VnetName'), parameters('spoke1WorkloadSubnet'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('spoke1VMNic'))]"
+            ],
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2024-07-01",
+            "name": "[parameters('spoke1VMName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2ms"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('spoke1VMName')]",
+                    "adminUsername": "winadmin",
+                    "adminPassword": "Winadmin1234"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2022-datacenter-g2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        },
+                        "diskSizeGB": 128,
+                        "deleteOption": "Delete"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('spoke1VMNic'))]",
+                            "properties": {
+                                "deleteOption": "Delete"
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            }
+        },
+        {
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('spoke1VMName'))]"
+            ],
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2024-07-01",
+            "name": "[format('{0}/{1}', parameters('spoke1VMName'), parameters('extensionName'))]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.7",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[parameters('scriptURL')]"
+                    ]
+                },
+                "protectedSettings": {
+                    "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File IIS.ps1"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2024-03-01",
+            "name": "[parameters('spoke2VMNic')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('spoke2VnetName'), parameters('spoke2WorkloadSubnet'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('spoke2VMNic'))]"
+            ],
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2024-07-01",
+            "name": "[parameters('spoke2VMName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2ms"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('spoke2VMName')]",
+                    "adminUsername": "winadmin",
+                    "adminPassword": "Winadmin1234"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2022-datacenter-g2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        },
+                        "diskSizeGB": 128,
+                        "deleteOption": "Delete"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('spoke2VMNic'))]",
+                            "properties": {
+                                "deleteOption": "Delete"
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            }
+        },
+        {
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('spoke2VMName'))]"
+            ],
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2024-07-01",
+            "name": "[format('{0}/{1}', parameters('spoke2VMName'), parameters('extensionName'))]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.7",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[parameters('scriptURL')]"
                     ]
                 },
                 "protectedSettings": {

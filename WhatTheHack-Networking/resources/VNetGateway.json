@@ -64,9 +64,11 @@
             "name": "[parameters('hubGatewayIPName')]",
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2024-03-01",
+            /*
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubVnetName'))]"
             ],
+            */
             "location": "[resourceGroup().location]",
             "properties": {
                 "publicIPAllocationMethod": "Static"
@@ -82,8 +84,8 @@
             "apiVersion": "2024-03-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubGatewayIPName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubVnetName'))]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubGatewayIPName'))]"
+                //"[resourceId('Microsoft.Network/virtualNetworks', parameters('hubVnetName'))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -113,9 +115,11 @@
             "name": "[parameters('onpremGatewayIPName')]",
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2024-03-01",
-            "dependsOn": [
+            /*
+            /"dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', parameters('onpremVnetName'))]"
             ],
+            */
             "location": "[resourceGroup().location]",
             "properties": {
                 "publicIPAllocationMethod": "Static"
@@ -131,8 +135,8 @@
             "apiVersion": "2024-03-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremGatewayIPName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('onpremVnetName'))]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('onpremGatewayIPName'))]"
+                //"[resourceId('Microsoft.Network/virtualNetworks', parameters('onpremVnetName'))]"
             ],
             "properties": {
                 "ipConfigurations": [
