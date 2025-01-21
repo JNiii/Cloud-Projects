@@ -2,39 +2,42 @@ $user = whoami
 $user = $user + "@instructorwhizlabs.onmicrosoft.com"
 
 $rg = Get-AzResourceGroup -location eastus
-$kvname = "vmkv3003"
-$adminName = "winadmin"
-$adminPass = read-host -prompt "Enter password" -assecurestring
+$kvname = "vmkv3005"
+$secretName = "winadmin"
+$secretPass = read-host -prompt "Enter password" -assecurestring
 $container = "scripts"
 
-$kv = new-azkeyvault -name $kvname -resourcegroup $rg.resourceGroupName -location "East US" -sku "Standard"
+new-azkeyvault -name $kvname -resourcegroup $rg.resourceGroupName -location "East US" -sku "Standard"
 
+$kv = Get-AzKeyVault -VaultName $kvname -ResourceGroupName $rg.resourceGroupName
+
+Start-Sleep -Seconds 5
 
 New-AzRoleAssignment -SignInName $user -RoleDefinitionName "Key Vault Administrator" -Scope $kv.resourceId
 
-Set-AzKeyVaultAccessPolicy -VaultName $kvname -UserPrincipalName $user -PermissionsToSecrets set, delete, get, list
+Set-AzKeyVaultAccessPolicy -VaultName $kvname -ResourceGroupName $rg.resourceGroupName -EnabledForDeployment $true -EnabledForTemplateDeployment $true -EnabledForTemplateDeployment $true
 
-set-azkeyvaultsecret -vaultname $kvname -name $adminNameName -secretvalue $adminPass -Expires (Get-Date).AddHours(2)
+set-azkeyvaultsecret -vaultname $kvname -name $secretName -secretvalue $secretPass -Expires (Get-Date).AddHours(2)
 
-$adminName = Get-AzKeyVaultSecret -vaultname $kvname -Name $adminNameName
+$secretName = Get-AzKeyVaultSecret -vaultname $kvname -Name $secretName
 
-write-host $adminName
+write-host $secretName
 
-new-azstoragecontainer -name $container -context (get-azstorageaccount -resourcegroupname $rg.resourceGroupName -name "azstore3000").context
+$context = (get-azstorageaccount -resourcegroupname $rg.resourceGroupName -name "azstore3000")
 
-$context = (get-azstorageaccount -resourcegroupname $rg.resourceGroupName -name "azstore3000").context
+new-azstoragecontainer -name $container -context $context.Context
 
 $upload = @{
     File             = 'IIS.ps1'
     Container        = $container
     Blob             = "IIS.ps1"
-    Context          = $context
+    Context          = $context.Context
     StandardBlobTier = 'Hot'
 }
 Set-AzStorageBlobContent @upload
 
-$blobep = (Get-AzStorageAccount -ResourceGroupName $rg.ResourceGroupName -Name "azstore3000").PrimaryEndpoints.Blob
+$blobep = $context.PrimaryEndpoints.Blob
 
-$token = New-AzStorageBlobSASToken -Container $container -Blob "IIS.ps1" -Permission r -ExpiryTime (Get-Date).AddHours(1) -context $context
+$token = New-AzStorageBlobSASToken -Container $container -Blob "IIS.ps1" -Permission r -ExpiryTime (Get-Date).AddHours(1) -context $context.Context
 
 $blobURI = $blobep + $container + "/IIS.ps1?" + $token
