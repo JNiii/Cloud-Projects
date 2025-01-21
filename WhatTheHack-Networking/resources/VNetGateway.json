@@ -51,10 +51,6 @@
         "vpntype": {
             "type": "string",
             "defaultValue": "RouteBased"
-        },
-        "connectionProtocol": {
-            "type": "string",
-            "defaultValue": "IKEv2"
         }
     },
     "functions": [],
