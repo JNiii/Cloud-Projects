@@ -21,7 +21,7 @@
             "metadata": {
                 "description": "The name of the keyvault that contains the secret."
             },
-            "defaultValue": "vmkv3007"
+            "defaultValue": "vmkv3010"
         },
         "secretName": {
             "type": "string",
@@ -65,7 +65,7 @@
                             "metadata": {
                                 "description": "URL of the script to be executed"
                             },
-                            "defaultValue": "https://azstore3000.blob.core.windows.net/scripts/IIS.ps1?sv=2023-08-03&se=2025-01-22T05%3A13%3A39Z&sr=b&sp=r&sig=wFMPYCEXytbWp9is6f%2FlpSDPKSQ%2F9h%2Fjrqtw%2BT%2Fd3LE%3D"
+                            "defaultValue": "https://azstore3000.blob.core.windows.net/scripts/IIS.ps1?sv=2025-01-05&se=2025-01-22T08%3A48%3A49Z&sr=b&sp=r&sig=oO9lcJqQJrGZSKHlZnSDFXUCAZvR1ceTNelXFeVJPKc%3D"
                         },
                         "extensionName": {
                             "type": "string",
