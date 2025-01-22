@@ -109,7 +109,7 @@
                                 "enableBgp": false,
                                 "connectionProtocol": "[parameters('connectionProtocol')]",
                                 "authenticationType": "PSK",
-                                "SharedKey": "Winadmin1234",
+                                "SharedKey": "[parameters('adminPass')]",
                                 "virtualNetworkGateway2": {
                                     "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('hubGatewayName'))]"
                                 }
