@@ -21,7 +21,7 @@
             "metadata": {
                 "description": "The name of the keyvault that contains the secret."
             },
-            "defaultValue": "vmkv3010"
+            "defaultValue": "vmkv3014"
         },
         "secretName": {
             "type": "string",

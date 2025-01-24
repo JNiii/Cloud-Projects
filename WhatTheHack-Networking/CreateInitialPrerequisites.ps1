@@ -2,7 +2,7 @@ $user = whoami
 $user = $user + "@instructorwhizlabs.onmicrosoft.com"
 
 $rg = Get-AzResourceGroup -location eastus
-$kvname = "vmkv3010"
+$kvname = "vmkv3014"
 $secretName = "winadmin"
 $secretPass = read-host -prompt "Enter password" -assecurestring
 $container = "scripts"
@@ -13,11 +13,12 @@ $kv = Get-AzKeyVault -VaultName $kvname -ResourceGroupName $rg.resourceGroupName
 
 New-AzRoleAssignment -SignInName $user -RoleDefinitionName "Key Vault Administrator" -Scope $kv.resourceId
 
-Start-Sleep -Seconds 15
+Write-Host "Waiting for Role Assignment replication to complete"
+Start-Sleep -Seconds 10
 
 Set-AzKeyVaultAccessPolicy -VaultName $kvname -ResourceGroupName $rg.resourceGroupName -EnabledForDeployment -EnabledForTemplateDeployment
 
-set-azkeyvaultsecret -vaultname $kvname -name $secretName -secretvalue $secretPass -Expires (Get-Date).AddHours(2)
+set-azkeyvaultsecret -vaultname $kvname -name $secretName -secretvalue $secretPass -Expires (Get-Date).AddHours(1)
 
 $secretName = Get-AzKeyVaultSecret -vaultname $kvname -Name $secretName
 

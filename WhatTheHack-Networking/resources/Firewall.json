@@ -1,135 +1,164 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-    "parameters": {},
+    "parameters": {
+        "firewallName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "az-fw"
+        },
+        "firewallPolicyName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "az-fw-pol"
+        },
+        "virtualNetworkResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "[resourceGroup().name]"
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "hub-vnet"
+        },
+        "firewallsubnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "AzureFirewallSubnet"
+        },
+        "firewallmanagementsubnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "AzureFirewallManagementSubnet"
+        }
+    },
     "functions": [],
     "variables": {},
     "resources": [
         {
-            "name": "az-fw",
+            "copy": {
+                "name": "firewall-pip-copy",
+                "count": 5
+            },
+            "name": "[format('firewall-pip-deployment-{0}', copyIndex())]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2024-07-01",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "variables": {},
+                    "resources": [
+                        {
+                            "name": "[format('az-fw-pip-{0}', copyIndex())]",
+                            "type": "Microsoft.Network/publicIPAddresses",
+                            "apiVersion": "2024-03-01",
+                            "location": "[resourceGroup().location]",
+                            "sku": {
+                                "name": "Standard"
+                            },
+                            "properties": {
+                                "publicIPAllocationMethod": "Static",
+                                "publicIPAddressVersion": "IPv4"
+                            }
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        },
+        {
+            "name": "[parameters('firewallPolicyName')]",
+            "type": "Microsoft.Network/firewallPolicies",
+            "apiVersion": "2022-07-01",
+            "properties": {
+                "sku": {
+                    "tier": "Basic"
+                }
+            },
+            "location": "[resourceGroup().location]"
+        },
+        {
+            "name": "[parameters('firewallName')]",
             "type": "Microsoft.Network/azureFirewalls",
             "apiVersion": "2024-03-01",
             "location": "[resourceGroup().location]",
-            "tags": {},
+            "dependsOn": [
+                "firewall-pip-copy",
+                "[parameters('firewallPolicyName')]"
+            ],
             "properties": {
-                "applicationRuleCollections": [
-                    {
-                        "name": "appCollectionName1",
-                        "properties": {
-                            "priority": 100,
-                            "action": {
-                                "type": "Allow"
-                            },
-                            "rules": [
-                                {
-                                    "name": "appRuleName1",
-                                    "description": "appRuleDescription",
-                                    "sourceAddresses": [
-                                        "10.0.0.4"
-                                    ],
-                                    "protocols": [
-                                        {
-                                            "protocolType": "Http",
-                                            "port": 80
-                                        }
-                                    ],
-                                    "targetFqdns": [
-                                        "www.microsoft.com"
-                                    ],
-                                    "fqdnTags": []
-                                }
-                            ]
+                "applicationRuleCollections": [],
+                "natRuleCollections": [],
+                "networkRuleCollections": [],
+                "firewallPolicy": {
+                    "id": "[resourceId('Microsoft.Network/azureFirewalls',parameters('firewallPolicyName'))]"
+                },
+                "managementIpConfiguration": {
+                    "name": "string",
+                    "properties": {
+                        "publicIPAddress": {
+                            "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-0')]"
+                        },
+                        "subnet": {
+                            "id": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('firewallmanagementsubnetName'))]"
                         }
                     }
-                ],
-                "natRuleCollections": [
-                    {
-                        "name": "natCollectionName1",
-                        "properties": {
-                            "priority": 100,
-                            "action": {
-                                "type": "Dnat"
-                            },
-                            "rules": [
-                                {
-                                    "name": "natRuleName1",
-                                    "description": "natRuleDescription",
-                                    "sourceAddresses": [
-                                        "10.0.0.4"
-                                    ],
-                                    "destinationAddresses": [
-                                        "[reference(resourceId('Microsoft.Network/publicIPAddresses', 'publicIPAddress1')).ipAddress]"
-                                    ],
-                                    "destinationPorts": [
-                                        "3389"
-                                    ],
-                                    "protocols": [
-                                        "TCP"
-                                    ],
-                                    "translatedAddress": "10.0.0.254",
-                                    "translatedPort": "2500"
-                                }
-                            ]
-                        }
-                    }
-                ],
-                "networkRuleCollections": [
-                    {
-                        "name": "networkCollectionName",
-                        "properties": {
-                            "priority": 100,
-                            "action": {
-                                "type": "Deny"
-                            },
-                            "rules": [
-                                {
-                                    "name": "networkRuleName",
-                                    "description": "networkRuleDescription",
-                                    "sourceAddresses": [
-                                        "10.0.0.4"
-                                    ],
-                                    "destinationAddresses": [
-                                        "10.0.1.4"
-                                    ],
-                                    "destinationPorts": [
-                                        "1"
-                                    ],
-                                    "protocols": [
-                                        "TCP"
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                ],
+                },
+                "sku": {
+                    "tier": "Basic"
+                },
                 "ipConfigurations": [
                     {
-                        "name": "ipConfigName",
+                        "name": "az-fw-pip",
                         "properties": {
                             "subnet": {
-                                "id": "[resourceId('virtualNetworkResourceGroup', 'Microsoft.Network/virtualNetworks/subnets', 'virtualNetworkName', 'AzureFirewallSubnet')]"
+                                "id": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('firewallsubnetName'))]"
                             },
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'publicIPAddress1')]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-1')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "hub-fw-pip",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-2')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "spoke1-fw-pip",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-3')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "spoke2-fw-pip",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-4')]"
                             }
                         }
                     }
                 ]
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', 'publicIPAddress1')]"
-            ]
-        },
-        {
-            "name": "publicIPAddress1",
-            "type": "Microsoft.Network/publicIPAddresses",
-            "apiVersion": "2024-03-01",
-            "location": "[resourceGroup().location]",
-            "sku": {
-                "name": "standard"
-            },
-            "properties": {
-                "publicIPAllocationMethod": "Static"
             }
         }
     ],
