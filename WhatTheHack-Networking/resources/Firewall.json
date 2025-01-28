@@ -6,8 +6,7 @@
             "type": "string",
             "metadata": {
                 "description": "description"
-            },
-            "defaultValue": "az-fw"
+            }
         },
         "firewallPolicyName": {
             "type": "string",
@@ -95,7 +94,7 @@
         {
             "name": "[parameters('firewallName')]",
             "type": "Microsoft.Network/azureFirewalls",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2020-03-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "firewall-pip-copy",

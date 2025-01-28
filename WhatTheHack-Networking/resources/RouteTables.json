@@ -1,0 +1,198 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "onprem-vnet": {
+            "type": "string",
+            "defaultValue": "172.16.0.0/16"
+        },
+        "firewallRTName": {
+            "type": "string",
+            "defaultValue": "fw-rt"
+        },
+        "workloadRTName": {
+            "type": "String",
+            "defaultValue": "workload-rt"
+        },
+        "firewallName": {
+            "type": "String"
+        },
+        "gatewayRTName": {
+            "type": "String",
+            "defaultValue": "gw-rt"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/routeTables",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2024-03-01",
+            "name": "[parameters('firewallRTName')]",
+            "properties": {
+                "disableBgpRoutePropagation": true,
+                "routes": [
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-onprem",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('firewallRTName'), 'to-onprem')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('onprem-vnet')]",
+                            "nextHopType": "VirtualNetworkGateway"
+
+                        }
+                    },
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-internet",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('firewallRTName'), 'to-internet')]",
+                        "properties": {
+                            "addressPrefix": "0.0.0.0/0",
+                            "nextHopType": "Internet"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-03-01",
+            "name": "[concat(parameters('firewallRTName'), '/to-internet')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('firewallRTName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "0.0.0.0/0",
+                "nextHopType": "Internet"
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-03-01",
+            "name": "[concat(parameters('firewallRTName'), '/to-onprem')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('firewallRTName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('onprem-vnet')]",
+                "nextHopType": "VirtualNetworkGateway"
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2024-03-01",
+            "name": "[parameters('workloadRTName')]",
+            "properties": {
+                "disableBgpRoutePropagation": true,
+                "routes": [
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-onprem",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('workloadRTName'), 'to-dg')]",
+                        "properties": {
+                            "addressPrefix": "0.0.0.0/0",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-03-01",
+            "name": "[concat(parameters('workloadRTName'), '/to-dg')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "0.0.0.0/0",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2024-03-01",
+            "name": "[parameters('gatewayRTName')]",
+            "properties": {
+                "disableBgpRoutePropagation": true,
+                "routes": [
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-hub",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('gatewayRTName'), 'to-hub')]",
+                        "properties": {
+                            "addressPrefix": "10.0.10.0/24",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                        }
+                    },
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-spoke1",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('gatewayRTName'), 'to-spoke1')]",
+                        "properties": {
+                            "addressPrefix": "10.1.0.0/16",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                        }
+                    },
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-spoke2",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('gatewayRTName'), 'to-spoke2')]",
+                        "properties": {
+                            "addressPrefix": "10.2.0.0/16",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-03-01",
+            "name": "[concat(parameters('gatewayRTName'), '/to-hub')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "10.0.10.0/24",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-03-01",
+            "name": "[concat(parameters('gatewayRTName'), '/to-spoke1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "10.1.0.0/16",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-03-01",
+            "name": "[concat(parameters('gatewayRTName'), '/to-spoke2')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "10.2.0.0/16",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+            }
+        }
+    ],
+    "outputs": {}
+}

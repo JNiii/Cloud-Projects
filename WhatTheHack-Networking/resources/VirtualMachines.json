@@ -2,6 +2,12 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "scriptURL": {
+            "type": "string",
+            "metadata": {
+                "description": "URL of the script to be executed"
+            }
+        },
         "vaultResourceGroupName": {
             "type": "string",
             "metadata": {
@@ -20,8 +26,7 @@
             "type": "string",
             "metadata": {
                 "description": "The name of the keyvault that contains the secret."
-            },
-            "defaultValue": "vmkv3014"
+            }
         },
         "secretName": {
             "type": "string",
@@ -44,6 +49,9 @@
                 },
                 "mode": "Incremental",
                 "parameters": {
+                    "script": {
+                        "value": "[parameters('scriptURL')]"
+                    },
                     "adminPass": {
                         "reference": {
                             "keyVault": {
@@ -57,15 +65,11 @@
                     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
                     "contentVersion": "1.0.0.0",
                     "parameters": {
+                        "script": {
+                            "type": "string"
+                        },
                         "adminPass": {
                             "type": "secureString"
-                        },
-                        "scriptURL": {
-                            "type": "string",
-                            "metadata": {
-                                "description": "URL of the script to be executed"
-                            },
-                            "defaultValue": "https://azstore3000.blob.core.windows.net/scripts/IIS.ps1?sv=2025-01-05&se=2025-01-24T07%3A23%3A40Z&sr=b&sp=r&sig=LXjMzJP31zeioEAE%2Fjhtysv5UUpynhTQP%2F%2BOrh%2BORH4%3D"
                         },
                         "extensionName": {
                             "type": "string",
@@ -366,7 +370,7 @@
                                 "autoUpgradeMinorVersion": true,
                                 "settings": {
                                     "fileUris": [
-                                        "[parameters('scriptURL')]"
+                                        "[parameters('script')]"
                                     ]
                                 },
                                 "protectedSettings": {
@@ -458,7 +462,7 @@
                                 "autoUpgradeMinorVersion": true,
                                 "settings": {
                                     "fileUris": [
-                                        "[parameters('scriptURL')]"
+                                        "[parameters('script')]"
                                     ]
                                 },
                                 "protectedSettings": {
@@ -550,7 +554,7 @@
                                 "autoUpgradeMinorVersion": true,
                                 "settings": {
                                     "fileUris": [
-                                        "[parameters('scriptURL')]"
+                                        "[parameters('script')]"
                                     ]
                                 },
                                 "protectedSettings": {

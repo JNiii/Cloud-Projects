@@ -1,13 +1,13 @@
 $user = whoami 
 $user = $user + "@instructorwhizlabs.onmicrosoft.com"
 
-$rg = Get-AzResourceGroup -location eastus
-$kvname = "vmkv3014"
+$rg = Get-AzResourceGroup -location southeastasia
+$kvname = read-host -prompt "Enter Key Vault Name"
 $secretName = "winadmin"
 $secretPass = read-host -prompt "Enter password" -assecurestring
 $container = "scripts"
 
-new-azkeyvault -name $kvname -resourcegroup $rg.resourceGroupName -location "East US" -sku "Standard"
+new-azkeyvault -name $kvname -resourcegroup $rg.resourceGroupName -location "Southeast Asia" -sku "Standard"
 
 $kv = Get-AzKeyVault -VaultName $kvname -ResourceGroupName $rg.resourceGroupName
 
