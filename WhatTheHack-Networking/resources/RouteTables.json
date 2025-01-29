@@ -14,12 +14,13 @@
             "type": "String",
             "defaultValue": "workload-rt"
         },
-        "firewallName": {
-            "type": "String"
-        },
         "gatewayRTName": {
             "type": "String",
             "defaultValue": "gw-rt"
+        },
+        "firewallPrivateIP": {
+            "type": "String",
+            "defaultValue": "10.0.1.4"
         }
     },
     "functions": [],
@@ -57,7 +58,7 @@
         },
         {
             "type": "Microsoft.Network/routeTables/routes",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2024-05-01",
             "name": "[concat(parameters('firewallRTName'), '/to-internet')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/routeTables', parameters('firewallRTName'))]"
@@ -69,7 +70,7 @@
         },
         {
             "type": "Microsoft.Network/routeTables/routes",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2024-05-01",
             "name": "[concat(parameters('firewallRTName'), '/to-onprem')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/routeTables', parameters('firewallRTName'))]"
@@ -89,12 +90,12 @@
                 "routes": [
                     {
                         "type": "Microsoft.Network/routeTables/routes",
-                        "name": "to-onprem",
+                        "name": "to-dg",
                         "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('workloadRTName'), 'to-dg')]",
                         "properties": {
                             "addressPrefix": "0.0.0.0/0",
                             "nextHopType": "VirtualAppliance",
-                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                            "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
                         }
                     }
                 ]
@@ -102,7 +103,7 @@
         },
         {
             "type": "Microsoft.Network/routeTables/routes",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2024-05-01",
             "name": "[concat(parameters('workloadRTName'), '/to-dg')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
@@ -110,13 +111,13 @@
             "properties": {
                 "addressPrefix": "0.0.0.0/0",
                 "nextHopType": "VirtualAppliance",
-                "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
             }
         },
         {
             "type": "Microsoft.Network/routeTables",
             "location": "[resourceGroup().location]",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2024-05-01",
             "name": "[parameters('gatewayRTName')]",
             "properties": {
                 "disableBgpRoutePropagation": true,
@@ -128,7 +129,7 @@
                         "properties": {
                             "addressPrefix": "10.0.10.0/24",
                             "nextHopType": "VirtualAppliance",
-                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                            "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
                         }
                     },
                     {
@@ -138,7 +139,7 @@
                         "properties": {
                             "addressPrefix": "10.1.0.0/16",
                             "nextHopType": "VirtualAppliance",
-                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                            "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
                         }
                     },
                     {
@@ -148,7 +149,7 @@
                         "properties": {
                             "addressPrefix": "10.2.0.0/16",
                             "nextHopType": "VirtualAppliance",
-                            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                            "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
                         }
                     }
                 ]
@@ -156,7 +157,7 @@
         },
         {
             "type": "Microsoft.Network/routeTables/routes",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2024-05-01",
             "name": "[concat(parameters('gatewayRTName'), '/to-hub')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
@@ -164,12 +165,12 @@
             "properties": {
                 "addressPrefix": "10.0.10.0/24",
                 "nextHopType": "VirtualAppliance",
-                "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
             }
         },
         {
             "type": "Microsoft.Network/routeTables/routes",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2024-05-01",
             "name": "[concat(parameters('gatewayRTName'), '/to-spoke1')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
@@ -177,12 +178,12 @@
             "properties": {
                 "addressPrefix": "10.1.0.0/16",
                 "nextHopType": "VirtualAppliance",
-                "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
             }
         },
         {
             "type": "Microsoft.Network/routeTables/routes",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2024-05-01",
             "name": "[concat(parameters('gatewayRTName'), '/to-spoke2')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
@@ -190,7 +191,7 @@
             "properties": {
                 "addressPrefix": "10.2.0.0/16",
                 "nextHopType": "VirtualAppliance",
-                "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/azureFirewalls', parameters('firewallName'))).properties.hubIPAddresses.privateIPAddress]"
+                "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
             }
         }
     ],

@@ -113,6 +113,18 @@
                 "description": "Name of Spoke 2 Workload NSG"
             },
             "defaultValue": "nsg-3"
+        },
+        "firewallRTName": {
+            "type": "string",
+            "defaultValue": "fw-rt"
+        },
+        "gatewayRTName": {
+            "type": "String",
+            "defaultValue": "gw-rt"
+        },
+        "workloadRTName": {
+            "type": "String",
+            "defaultValue": "workload-rt"
         }
     },
     "functions": [],
@@ -133,13 +145,19 @@
                     {
                         "name": "GatewaySubnet",
                         "properties": {
-                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,0)]"
+                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,0)]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
+                            }
                         }
                     },
                     {
                         "name": "AzureFirewallSubnet",
                         "properties": {
-                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,1)]"
+                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,1)]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', parameters('firewallRTName'))]"
+                            }
                         }
                     },
                     {
@@ -151,7 +169,13 @@
                     {
                         "name": "[parameters('hubWorkloadSubnet')]",
                         "properties": {
-                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,10)]"
+                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,10)]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
+                            },
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('hubNSG'))]"
+                            }
                         }
                     }
 
@@ -173,7 +197,13 @@
                     {
                         "name": "[parameters('spoke1WorkloadSubnet')]",
                         "properties": {
-                            "addressPrefix": "[cidrSubnet(parameters('spoke1AddressPrefix'),24,10)]"
+                            "addressPrefix": "[cidrSubnet(parameters('spoke1AddressPrefix'),24,10)]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
+                            },
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('spoke1NSG'))]"
+                            }
                         }
                     }
 
@@ -195,7 +225,13 @@
                     {
                         "name": "[parameters('spoke2WorkloadSubnet')]",
                         "properties": {
-                            "addressPrefix": "[cidrSubnet(parameters('spoke2AddressPrefix'),24,10)]"
+                            "addressPrefix": "[cidrSubnet(parameters('spoke2AddressPrefix'),24,10)]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
+                            },
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('spoke2NSG'))]"
+                            }
                         }
                     }
 
@@ -223,12 +259,16 @@
                     {
                         "name": "[parameters('onpremWorkloadSubnet')]",
                         "properties": {
-                            "addressPrefix": "[cidrSubnet(parameters('onpremAddressPrefix'),24,10)]"
+                            "addressPrefix": "[cidrSubnet(parameters('onpremAddressPrefix'),24,10)]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('onpremNSG'))]"
+                            }
                         }
                     }
                 ]
             }
-        },
+        }
+        /*
         {
             "name": "apply-nsgs-to-workload-subnets",
             "type": "Microsoft.Resources/deployments",
@@ -299,6 +339,8 @@
                 }
             }
         }
+        */
+
     ],
     "outputs": {}
 }

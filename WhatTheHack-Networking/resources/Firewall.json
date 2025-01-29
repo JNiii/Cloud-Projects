@@ -101,11 +101,8 @@
                 "[parameters('firewallPolicyName')]"
             ],
             "properties": {
-                "applicationRuleCollections": [],
-                "natRuleCollections": [],
-                "networkRuleCollections": [],
                 "firewallPolicy": {
-                    "id": "[resourceId('Microsoft.Network/azureFirewalls',parameters('firewallPolicyName'))]"
+                    "id": "[resourceId('Microsoft.Network/firewallPolicies',parameters('firewallPolicyName'))]"
                 },
                 "managementIpConfiguration": {
                     "name": "string",
