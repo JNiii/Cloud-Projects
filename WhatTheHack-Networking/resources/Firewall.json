@@ -80,7 +80,7 @@
                 }
             }
         },
-        {
+                {
             "name": "[parameters('firewallPolicyName')]",
             "type": "Microsoft.Network/firewallPolicies",
             "apiVersion": "2022-07-01",

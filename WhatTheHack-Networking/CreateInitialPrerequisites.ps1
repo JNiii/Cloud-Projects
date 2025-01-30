@@ -1,30 +1,37 @@
 $user = whoami 
 $user = $user + "@instructorwhizlabs.onmicrosoft.com"
 
-$rg = Get-AzResourceGroup -location southeastasia
+$rg = Get-AzResourceGroup -location eastus
 $kvname = read-host -prompt "Enter Key Vault Name"
-$secretName = "winadmin"
-$secretPass = read-host -prompt "Enter password" -assecurestring
+$storageName = read-host -prompt "Enter Storage Name"
+
+$adminsecretName = "winadmin"
+$storagesecretName = "storageaccountkey"
+
+$adminsecretPass = read-host -prompt "Enter Admin password for Virtual Machine logon" -assecurestring
 $container = "scripts"
 
-new-azkeyvault -name $kvname -resourcegroup $rg.resourceGroupName -location "Southeast Asia" -sku "Standard"
+new-azkeyvault -name $kvname -resourcegroup $rg.resourceGroupName -location "East US" -sku "Standard"
 
 $kv = Get-AzKeyVault -VaultName $kvname -ResourceGroupName $rg.resourceGroupName
 
 New-AzRoleAssignment -SignInName $user -RoleDefinitionName "Key Vault Administrator" -Scope $kv.resourceId
 
 Write-Host "Waiting for Role Assignment replication to complete"
+
 Start-Sleep -Seconds 10
 
 Set-AzKeyVaultAccessPolicy -VaultName $kvname -ResourceGroupName $rg.resourceGroupName -EnabledForDeployment -EnabledForTemplateDeployment
 
-set-azkeyvaultsecret -vaultname $kvname -name $secretName -secretvalue $secretPass -Expires (Get-Date).AddHours(1)
+set-azkeyvaultsecret -vaultname $kvname -name $adminsecretName -secretvalue $adminsecretPass -Expires (Get-Date).AddHours(1)
 
-$secretName = Get-AzKeyVaultSecret -vaultname $kvname -Name $secretName
+$context = (get-azstorageaccount -resourcegroupname $rg.resourceGroupName -name $storageName)
 
-write-host $secretName
+$token = Get-AzStorageAccountKey -ResourceGroupName $rg.resourceGroupName -Name $storageName | select -ExpandProperty Value
 
-$context = (get-azstorageaccount -resourcegroupname $rg.resourceGroupName -name "azstore3000")
+$token = ConvertTo-SecureString $token[0] -AsPlainText -Force
+
+set-azkeyvaultsecret -vaultname $kvname -name $storagesecretName -secretvalue $token -Expires (Get-Date).AddHours(1)
 
 new-azstoragecontainer -name $container -context $context.Context
 
@@ -39,8 +46,7 @@ Set-AzStorageBlobContent @upload
 
 $blobep = $context.PrimaryEndpoints.Blob
 
-$token = New-AzStorageBlobSASToken -Container $container -Blob "IIS.ps1" -Permission r -ExpiryTime (Get-Date).AddHours(1) -context $context.Context
-
-$blobURI = $blobep + $container + "/IIS.ps1?" + $token
+$blobURI = $blobep + $container + "/IIS.ps1"
 
 write-host $blobUri
+write-host $kvname
