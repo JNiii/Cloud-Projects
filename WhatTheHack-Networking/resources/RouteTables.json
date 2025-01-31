@@ -21,6 +21,69 @@
         "firewallPrivateIP": {
             "type": "String",
             "defaultValue": "10.0.1.4"
+        },
+        "hubVnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "your Hub Virtual Network name"
+            },
+            "defaultValue": "hub-vnet"
+        },
+        "hubWorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Hub Workload Subnet"
+            },
+            "defaultValue": "hub-workload-subnet"
+        },
+        "hubAddressPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Hub Virtual Network Address Prefix"
+            },
+            "defaultValue": "10.0.0.0/16"
+        },
+        "spoke1VnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "your Spoke1 Virtual Network name"
+            },
+            "defaultValue": "spoke1-vnet"
+        },
+        "spoke1AddressPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Spoke1 Virtual Network Address Prefix"
+            },
+            "defaultValue": "10.1.0.0/16"
+        },
+        "spoke1WorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Spoke1 Workload Subnet"
+            },
+            "defaultValue": "spoke1-workload-subnet"
+        },
+        "spoke2VnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "your Spoke2 Virtual Network name"
+            },
+            "defaultValue": "spoke2-vnet"
+        },
+        "spoke2AddressPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Spoke2 Virtual Network Address Prefix"
+            },
+            "defaultValue": "10.2.0.0/16"
+        },
+        "spoke2WorkloadSubnet": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Spoke2 Workload Subnet"
+            },
+            "defaultValue": "spoke2-workload-subnet"
         }
     },
     "functions": [],
@@ -192,6 +255,82 @@
                 "addressPrefix": "10.2.0.0/16",
                 "nextHopType": "VirtualAppliance",
                 "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+            }
+        },
+        {
+            "name": "Assign_RouteTables_to_Subnets",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2024-07-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]",
+                "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]",
+                "[resourceId('Microsoft.Network/routeTables', parameters('firewallRTName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "apiVersion": "2022-11-01",
+                            "name": "[concat(parameters('hubVnetName'), '/', 'GatewaySubnet')]",
+                            "properties": {
+                                "routeTable": {
+                                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
+                                },
+                                "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,0)]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "apiVersion": "2022-11-01",
+                            "name": "[concat(parameters('hubVnetName'), '/', 'AzureFirewallSubnet')]",
+                            "properties": {
+                                "routeTable": {
+                                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('firewallRTName'))]"
+                                },
+                                "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,1)]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "apiVersion": "2022-11-01",
+                            "name": "[concat(parameters('hubVnetName'), '/', parameters('hubWorkloadSubnet'))]",
+                            "properties": {
+                                "routeTable": {
+                                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
+                                },
+                                "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,10)]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "apiVersion": "2022-11-01",
+                            "name": "[concat(parameters('spoke1VnetName'), '/', parameters('spoke1WorkloadSubnet'))]",
+                            "properties": {
+                                "routeTable": {
+                                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
+                                },
+                                "addressPrefix": "[cidrSubnet(parameters('spoke1AddressPrefix'),24,10)]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "apiVersion": "2022-11-01",
+                            "name": "[concat(parameters('spoke2VnetName'), '/', parameters('spoke2WorkloadSubnet'))]",
+                            "properties": {
+                                "routeTable": {
+                                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
+                                },
+                                "addressPrefix": "[cidrSubnet(parameters('spoke2AddressPrefix'),24,10)]"
+                            }
+                        }
+                    ],
+                    "outputs": {}
+                }
             }
         }
     ],
