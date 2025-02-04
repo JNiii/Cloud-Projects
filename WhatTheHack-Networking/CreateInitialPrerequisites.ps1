@@ -27,7 +27,7 @@ set-azkeyvaultsecret -vaultname $kvname -name $adminsecretName -secretvalue $adm
 
 $context = (get-azstorageaccount -resourcegroupname $rg.resourceGroupName -name $storageName)
 
-$token = Get-AzStorageAccountKey -ResourceGroupName $rg.resourceGroupName -Name $storageName | select -ExpandProperty Value
+$token = Get-AzStorageAccountKey -ResourceGroupName $rg.resourceGroupName -Name $storageName | Select-Object -ExpandProperty Value
 
 $token = ConvertTo-SecureString $token[0] -AsPlainText -Force
 

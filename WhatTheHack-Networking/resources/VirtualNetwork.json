@@ -23,6 +23,13 @@
             },
             "defaultValue": "hub-workload-subnet"
         },
+        "appGWSubnet": {
+            "type": "string",
+            "defaultValue": "app-gw-subnet",
+            "metadata": {
+                "description": "Name of Application Gateway Subnet"
+            }
+        },
         "hubNSG": {
             "type": "string",
             "metadata": {
@@ -146,6 +153,12 @@
                         "name": "AzureFirewallManagementSubnet",
                         "properties": {
                             "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,2)]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('appGWSubnet')]",
+                        "properties": {
+                            "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,3)]"
                         }
                     },
                     {

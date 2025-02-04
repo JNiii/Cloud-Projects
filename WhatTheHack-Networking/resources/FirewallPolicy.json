@@ -2,28 +2,105 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "firewallPolicyName": {
-            "type": "string",
-            "metadata": {
-                "description": "description"
-            },
-            "defaultValue": "az-fw-pol"
+        "policyName": {
+            "defaultValue": "az-fw-pol",
+            "type": "String"
         }
     },
-    "functions": [],
     "variables": {},
     "resources": [
         {
-            "name": "[parameters('firewallPolicyName')]",
             "type": "Microsoft.Network/firewallPolicies",
-            "apiVersion": "2022-07-01",
+            "apiVersion": "2024-03-01",
+            "name": "[parameters('policyName')]",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "sku": {
                     "tier": "Basic"
-                }
-            },
-            "location": "[resourceGroup().location]"
+                },
+                "threatIntelMode": "Alert"
+            }
+        },
+        {
+            "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+            "apiVersion": "2024-03-01",
+            "name": "[concat(parameters('policyName'), '/DefaultNetworkRuleCollectionGroup')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/firewallPolicies', parameters('policyName'))]"
+            ],
+            "properties": {
+                "priority": 200,
+                "ruleCollections": [
+                    {
+                        "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                        "action": {
+                            "type": "Allow"
+                        },
+                        "rules": [
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Hub",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "172.16.0.0/16"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": [
+                                    "10.0.10.0/24"
+                                ],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [],
+                                "destinationPorts": [
+                                    "3389"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Spoke1",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "172.16.0.0/16"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": [
+                                    "10.1.10.0/24"
+                                ],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [],
+                                "destinationPorts": [
+                                    "3389"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Spoke2",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "172.16.0.0/16"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": [
+                                    "10.2.10.0/24"
+                                ],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [],
+                                "destinationPorts": [
+                                    "3389"
+                                ]
+                            }
+                        ],
+                        "name": "RDP",
+                        "priority": 400
+                    }
+                ]
+            }
         }
-    ],
-    "outputs": {}
+    ]
 }

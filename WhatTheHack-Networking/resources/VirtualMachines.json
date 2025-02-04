@@ -15,12 +15,15 @@
             },
             "defaultValue": "storageaccountkey"
         },
+        /*
         "scriptURL": {
             "type": "string",
             "metadata": {
                 "description": "URL of the script to be executed"
             }
         },
+        */
+
         "vaultResourceGroupName": {
             "type": "string",
             "metadata": {
@@ -65,9 +68,13 @@
                     "storageAccountName": {
                         "value": "[parameters('storageAccountName')]"
                     },
+
+                    /*
                     "script": {
                         "value": "[parameters('scriptURL')]"
                     },
+                    */
+
                     "saskey": {
                         "reference": {
                             "keyVault": {
@@ -95,9 +102,12 @@
                         "saskey": {
                             "type": "secureString"
                         },
+                        /*
                         "script": {
                             "type": "string"
                         },
+                        */
+
                         "adminPass": {
                             "type": "secureString"
                         },
@@ -403,7 +413,7 @@
                                     "storageAccountName": "[parameters('storageAccountName')]",
                                     "storageAccountKey": "[parameters('saskey')]",
                                     "fileUris": [
-                                        "[parameters('script')]"
+                                        "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-01-01').primaryEndpoints.blob]"
                                     ]
                                 }
                             }
@@ -495,7 +505,7 @@
                                     "storageAccountName": "[parameters('storageAccountName')]",
                                     "storageAccountKey": "[parameters('saskey')]",
                                     "fileUris": [
-                                        "[parameters('script')]"
+                                        "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-01-01').primaryEndpoints.blob]"
                                     ]
                                 }
                             }
@@ -587,7 +597,7 @@
                                     "storageAccountName": "[parameters('storageAccountName')]",
                                     "storageAccountKey": "[parameters('saskey')]",
                                     "fileUris": [
-                                        "[parameters('script')]"
+                                        "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-01-01').primaryEndpoints.blob]"
                                     ]
                                 }
                             }
