@@ -4,6 +4,26 @@
     "parameters": {
         "policyName": {
             "type": "String"
+        },
+        "app-gw-subnet": {
+            "type": "string",
+            "defaultValue": "10.0.3.0/24"
+        },
+        "onprem-vnet": {
+            "type": "string",
+            "defaultValue": "172.16.0.0/16"
+        },
+        "hub-workload-subnet": {
+            "type": "string",
+            "defaultValue": "10.0.10.0/24"
+        },
+        "spoke1-vnet": {
+            "type": "string",
+            "defaultValue": "10.1.0.0/16"
+        },
+        "spoke2-vnet": {
+            "type": "string",
+            "defaultValue": "10.2.0.0/16"
         }
     },
     "variables": {},
@@ -16,8 +36,7 @@
             "properties": {
                 "sku": {
                     "tier": "Basic"
-                },
-                "threatIntelMode": "Alert"
+                }
             }
         },
         {
@@ -44,11 +63,11 @@
                                     "TCP"
                                 ],
                                 "sourceAddresses": [
-                                    "172.16.0.0/16"
+                                    "[parameters('onprem-vnet')]"
                                 ],
                                 "sourceIpGroups": [],
                                 "destinationAddresses": [
-                                    "10.0.10.0/24"
+                                    "[parameters('hub-workload-subnet')]"
                                 ],
                                 "destinationIpGroups": [],
                                 "destinationFqdns": [],
@@ -63,11 +82,11 @@
                                     "TCP"
                                 ],
                                 "sourceAddresses": [
-                                    "172.16.0.0/16"
+                                   "[parameters('onprem-vnet')]"
                                 ],
                                 "sourceIpGroups": [],
                                 "destinationAddresses": [
-                                    "10.1.10.0/24"
+                                    "[parameters('spoke1-vnet')]"
                                 ],
                                 "destinationIpGroups": [],
                                 "destinationFqdns": [],
@@ -82,14 +101,12 @@
                                     "TCP"
                                 ],
                                 "sourceAddresses": [
-                                    "172.16.0.0/16"
+                                    "[parameters('onprem-vnet')]"
                                 ],
                                 "sourceIpGroups": [],
                                 "destinationAddresses": [
-                                    "10.2.10.0/24"
+                                    "[parameters('spoke2-vnet')]"
                                 ],
-                                "destinationIpGroups": [],
-                                "destinationFqdns": [],
                                 "destinationPorts": [
                                     "3389"
                                 ]
@@ -97,6 +114,64 @@
                         ],
                         "name": "RDP",
                         "priority": 400
+                    },
+                    {
+                        "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                        "action": {
+                            "type": "Allow"
+                        },
+                        "rules": [
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Spoke1",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('app-gw-subnet')]"
+                                ],
+                                "destinationAddresses": [
+                                    "[parameters('spoke1-vnet')]"
+                                ],
+                                "destinationPorts": [
+                                    "80"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Spoke2",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('app-gw-subnet')]"
+                                ],
+                                "destinationAddresses": [
+                                    "[parameters('spoke2-vnet')]"
+                                ],
+                                "destinationPorts": [
+                                    "80"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Hub",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('app-gw-subnet')]"
+                                ],
+                                "destinationAddresses": [
+                                    "[parameters('hub-workload-subnet')]"
+                                ],
+                                "destinationPorts": [
+                                    "80"
+                                ]
+                            }
+                        ],
+                        "name": "HTTP",
+                        "priority": 410
                     }
                 ]
             }
