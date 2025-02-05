@@ -2,8 +2,9 @@ $user = whoami
 $user = $user + "@instructorwhizlabs.onmicrosoft.com"
 
 $rg = Get-AzResourceGroup -location eastus
-$kvname = read-host -prompt "Enter Key Vault Name"
 $storageName = read-host -prompt "Enter Storage Name"
+$kvname = read-host -prompt "Enter Key Vault Name"
+
 
 $adminsecretName = "winadmin"
 $storagesecretName = "storageaccountkey"
@@ -44,9 +45,3 @@ $upload = @{
 }
 Set-AzStorageBlobContent @upload
 
-$blobep = $context.PrimaryEndpoints.Blob
-
-$blobURI = $blobep + $container + "/IIS.ps1"
-
-write-host $blobUri
-write-host $kvname
