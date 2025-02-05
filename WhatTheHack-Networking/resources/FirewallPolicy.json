@@ -29,7 +29,7 @@
                 "[resourceId('Microsoft.Network/firewallPolicies', parameters('policyName'))]"
             ],
             "properties": {
-                "priority": 200,
+                "priority": 300,
                 "ruleCollections": [
                     {
                         "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
@@ -97,6 +97,64 @@
                         ],
                         "name": "RDP",
                         "priority": 400
+                    },
+                    {
+                        "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                        "action": {
+                            "type": "Allow"
+                        },
+                        "rules": [
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Hub",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "10.0.3.0/24"
+                                ],
+                                "destinationAddresses": [
+                                    "10.0.10.0/24"
+                                ],
+                                "destinationPorts": [
+                                    "80"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Spoke1",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "10.0.3.0/24"
+                                ],
+                                "destinationAddresses": [
+                                    "10.1.10.0/24"
+                                ],
+                                "destinationPorts": [
+                                    "80"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Spoke2",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "10.0.3.0/24"
+                                ],
+                                "destinationAddresses": [
+                                    "10.2.10.0/24"
+                                ],
+                                "destinationPorts": [
+                                    "80"
+                                ]
+                            }
+                        ],
+                        "name": "HTTP",
+                        "priority": 410
                     }
                 ]
             }

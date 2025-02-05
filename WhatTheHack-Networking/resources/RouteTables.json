@@ -36,6 +36,25 @@
             },
             "defaultValue": "hub-workload-subnet"
         },
+        "hubWorkloadPrefix": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Hub Workload Subnet"
+            },
+            "defaultValue": "10.0.10.0/24"
+        },
+        "appGWSubnetName": {
+            "type": "string",
+            "defaultValue": "app-gw-subnet"
+        },
+        "appGWRT": {
+            "type": "string",
+            "defaultValue": "app-gw-rt"
+        },
+        "appGWPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.3.0/24"
+        },
         "hubAddressPrefix": {
             "type": "string",
             "metadata": {
@@ -160,6 +179,17 @@
                             "nextHopType": "VirtualAppliance",
                             "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
                         }
+                    },
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-app-gw",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('workloadRTName'), 'to-app-gw')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('appGWPrefix')]",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+                        }
+
                     }
                 ]
             }
@@ -178,6 +208,19 @@
             }
         },
         {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-05-01",
+            "name": "[concat(parameters('workloadRTName'), '/to-app-gw')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('appGWPrefix')]",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+            }
+        },
+        {
             "type": "Microsoft.Network/routeTables",
             "location": "[resourceGroup().location]",
             "apiVersion": "2024-05-01",
@@ -190,7 +233,7 @@
                         "name": "to-hub",
                         "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('gatewayRTName'), 'to-hub')]",
                         "properties": {
-                            "addressPrefix": "10.0.10.0/24",
+                            "addressPrefix": "[parameters('hubWorkloadPrefix')]",
                             "nextHopType": "VirtualAppliance",
                             "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
                         }
@@ -200,7 +243,7 @@
                         "name": "to-spoke1",
                         "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('gatewayRTName'), 'to-spoke1')]",
                         "properties": {
-                            "addressPrefix": "10.1.0.0/16",
+                            "addressPrefix": "[parameters('spoke1AddressPrefix')]",
                             "nextHopType": "VirtualAppliance",
                             "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
                         }
@@ -210,7 +253,7 @@
                         "name": "to-spoke2",
                         "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('gatewayRTName'), 'to-spoke2')]",
                         "properties": {
-                            "addressPrefix": "10.2.0.0/16",
+                            "addressPrefix": "[parameters('spoke2AddressPrefix')]",
                             "nextHopType": "VirtualAppliance",
                             "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
                         }
@@ -226,7 +269,7 @@
                 "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
             ],
             "properties": {
-                "addressPrefix": "10.0.10.0/24",
+                "addressPrefix": "[parameters('hubWorkloadPrefix')]",
                 "nextHopType": "VirtualAppliance",
                 "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
             }
@@ -239,7 +282,7 @@
                 "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
             ],
             "properties": {
-                "addressPrefix": "10.1.0.0/16",
+                "addressPrefix": "[parameters('spoke1AddressPrefix')]",
                 "nextHopType": "VirtualAppliance",
                 "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
             }
@@ -252,7 +295,87 @@
                 "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]"
             ],
             "properties": {
-                "addressPrefix": "10.2.0.0/16",
+                "addressPrefix": "[parameters('spoke2AddressPrefix')]",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2024-03-01",
+            "name": "[parameters('appGWRT')]",
+            "properties": {
+                "disableBgpRoutePropagation": true,
+                "routes": [
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-spoke1",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('firewallRTName'), 'to-spoke1')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('spoke1AddressPrefix')]",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+                        }
+                    },
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-spoke2",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('firewallRTName'), 'to-spoke2')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('spoke2AddressPrefix')]",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+                        }
+                    },
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-hub-workload",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('firewallRTName'), 'to-hub-workload')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('hubWorkloadPrefix')]",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-05-01",
+            "name": "[concat(parameters('appGWRT'), '/to-spoke1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('appGWRT'))]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('spoke1AddressPrefix')]",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-05-01",
+            "name": "[concat(parameters('appGWRT'), '/to-spoke2')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('appGWRT'))]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('spoke2AddressPrefix')]",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-05-01",
+            "name": "[concat(parameters('appGWRT'), '/to-hub-workload')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('appGWRT'))]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('hubWorkloadPrefix')]",
                 "nextHopType": "VirtualAppliance",
                 "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
             }
@@ -264,7 +387,8 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]",
                 "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRTName'))]",
-                "[resourceId('Microsoft.Network/routeTables', parameters('firewallRTName'))]"
+                "[resourceId('Microsoft.Network/routeTables', parameters('firewallRTName'))]",
+                "[resourceId('Microsoft.Network/routeTables', parameters('appGWRT'))]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -326,6 +450,17 @@
                                     "id": "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
                                 },
                                 "addressPrefix": "[cidrSubnet(parameters('spoke2AddressPrefix'),24,10)]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "apiVersion": "2022-11-01",
+                            "name": "[concat(parameters('hubVnetName'), '/', parameters('appGWSubnetName'))]",
+                            "properties": {
+                                "routeTable": {
+                                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('appGWRT'))]"
+                                },
+                                "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,3)]"
                             }
                         }
                     ],
