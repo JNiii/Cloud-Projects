@@ -82,7 +82,7 @@
                                     "TCP"
                                 ],
                                 "sourceAddresses": [
-                                   "[parameters('onprem-vnet')]"
+                                    "[parameters('onprem-vnet')]"
                                 ],
                                 "sourceIpGroups": [],
                                 "destinationAddresses": [
@@ -114,6 +114,71 @@
                         ],
                         "name": "RDP",
                         "priority": 400
+                    },
+                    {
+                        "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                        "action": {
+                            "type": "Allow"
+                        },
+                        "rules": [
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Hub",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('app-gw-subnet')]"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": [
+                                    "[parameters('hub-workload-subnet')]"
+                                ],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [],
+                                "destinationPorts": [
+                                    "80"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Spoke1",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('app-gw-subnet')]"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": [
+                                    "[parameters('spoke1-vnet')]"
+                                ],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [],
+                                "destinationPorts": [
+                                    "80"
+                                ]
+                            },
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "Spoke2",
+                                "ipProtocols": [
+                                    "TCP"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('app-gw-subnet')]"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": [
+                                    "[parameters('spoke2-vnet')]"
+                                ],
+                                "destinationPorts": [
+                                    "80"
+                                ]
+                            }
+                        ],
+                        "name": "HTTP",
+                        "priority": 410
                     }
                 ]
             }
