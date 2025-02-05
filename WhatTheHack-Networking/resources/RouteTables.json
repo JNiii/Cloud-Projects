@@ -311,7 +311,7 @@
                     {
                         "type": "Microsoft.Network/routeTables/routes",
                         "name": "to-spoke1",
-                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('firewallRTName'), 'to-spoke1')]",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('appGWRT'), 'to-spoke1')]",
                         "properties": {
                             "addressPrefix": "[parameters('spoke1AddressPrefix')]",
                             "nextHopType": "VirtualAppliance",
@@ -321,7 +321,7 @@
                     {
                         "type": "Microsoft.Network/routeTables/routes",
                         "name": "to-spoke2",
-                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('firewallRTName'), 'to-spoke2')]",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('appGWRT'), 'to-spoke2')]",
                         "properties": {
                             "addressPrefix": "[parameters('spoke2AddressPrefix')]",
                             "nextHopType": "VirtualAppliance",
@@ -331,11 +331,20 @@
                     {
                         "type": "Microsoft.Network/routeTables/routes",
                         "name": "to-hub-workload",
-                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('firewallRTName'), 'to-hub-workload')]",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('appGWRT'), 'to-hub-workload')]",
                         "properties": {
                             "addressPrefix": "[parameters('hubWorkloadPrefix')]",
                             "nextHopType": "VirtualAppliance",
                             "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+                        }
+                    },
+                    {
+                        "type": "Microsoft.Network/routeTables/routes",
+                        "name": "to-onprem",
+                        "id": "[resourceId('Microsoft.Network/routeTables/routes', parameters('appGWRT'), 'to-onprem')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('onprem-vnet')]",
+                            "nextHopType": "VirtualNetworkGateway"
                         }
                     }
                 ]
@@ -378,6 +387,18 @@
                 "addressPrefix": "[parameters('hubWorkloadPrefix')]",
                 "nextHopType": "VirtualAppliance",
                 "nextHopIpAddress": "[parameters('firewallPrivateIP')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2024-05-01",
+            "name": "[concat(parameters('appGWRT'), '/to-onprem')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('appGWRT'))]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('onprem-vnet')]",
+                "nextHopType": "VirtualNetworkGateway"
             }
         },
         {
