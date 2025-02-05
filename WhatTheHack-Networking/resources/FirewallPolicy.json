@@ -48,7 +48,7 @@
                 "[resourceId('Microsoft.Network/firewallPolicies', parameters('policyName'))]"
             ],
             "properties": {
-                "priority": 200,
+                "priority": 300,
                 "ruleCollections": [
                     {
                         "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
@@ -114,64 +114,6 @@
                         ],
                         "name": "RDP",
                         "priority": 400
-                    },
-                    {
-                        "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
-                        "action": {
-                            "type": "Allow"
-                        },
-                        "rules": [
-                            {
-                                "ruleType": "NetworkRule",
-                                "name": "Spoke1",
-                                "ipProtocols": [
-                                    "TCP"
-                                ],
-                                "sourceAddresses": [
-                                    "[parameters('app-gw-subnet')]"
-                                ],
-                                "destinationAddresses": [
-                                    "[parameters('spoke1-vnet')]"
-                                ],
-                                "destinationPorts": [
-                                    "80"
-                                ]
-                            },
-                            {
-                                "ruleType": "NetworkRule",
-                                "name": "Spoke2",
-                                "ipProtocols": [
-                                    "TCP"
-                                ],
-                                "sourceAddresses": [
-                                    "[parameters('app-gw-subnet')]"
-                                ],
-                                "destinationAddresses": [
-                                    "[parameters('spoke2-vnet')]"
-                                ],
-                                "destinationPorts": [
-                                    "80"
-                                ]
-                            },
-                            {
-                                "ruleType": "NetworkRule",
-                                "name": "Hub",
-                                "ipProtocols": [
-                                    "TCP"
-                                ],
-                                "sourceAddresses": [
-                                    "[parameters('app-gw-subnet')]"
-                                ],
-                                "destinationAddresses": [
-                                    "[parameters('hub-workload-subnet')]"
-                                ],
-                                "destinationPorts": [
-                                    "80"
-                                ]
-                            }
-                        ],
-                        "name": "HTTP",
-                        "priority": 410
                     }
                 ]
             }
