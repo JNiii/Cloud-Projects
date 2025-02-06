@@ -25,8 +25,8 @@ New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $gwconn -vaultName $vaultname
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetpeer
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $fwpol -policyName $firewallPolicyName
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $fw -firewallName $firewallName -firewallPolicyName $firewallPolicyName
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $ag
+New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $fw -firewallName $firewallName -firewallPolicyName $firewallPolicyName -asJob
+New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $ag -asJob
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $rt
 
 
