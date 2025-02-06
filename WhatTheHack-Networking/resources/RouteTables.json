@@ -111,7 +111,7 @@
         {
             "type": "Microsoft.Network/routeTables",
             "location": "[resourceGroup().location]",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2024-05-01",
             "name": "[parameters('firewallRTName')]",
             "properties": {
                 "disableBgpRoutePropagation": true,
@@ -165,7 +165,7 @@
         {
             "type": "Microsoft.Network/routeTables",
             "location": "[resourceGroup().location]",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2024-05-01",
             "name": "[parameters('workloadRTName')]",
             "properties": {
                 "disableBgpRoutePropagation": true,
@@ -303,7 +303,7 @@
         {
             "type": "Microsoft.Network/routeTables",
             "location": "[resourceGroup().location]",
-            "apiVersion": "2024-03-01",
+            "apiVersion": "2024-05-01",
             "name": "[parameters('appGWRT')]",
             "properties": {
                 "disableBgpRoutePropagation": true,
@@ -439,6 +439,17 @@
                                 },
                                 "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,1)]"
                             }
+                        }, 
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "apiVersion": "2022-11-01",
+                            "name": "[concat(parameters('hubVnetName'), '/', parameters('appGWSubnetName'))]",
+                            "properties": {
+                                "routeTable": {
+                                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('appGWRT'))]"
+                                },
+                                "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,3)]"
+                            }
                         },
                         {
                             "type": "Microsoft.Network/virtualNetworks/subnets",
@@ -471,17 +482,6 @@
                                     "id": "[resourceId('Microsoft.Network/routeTables', parameters('workloadRTName'))]"
                                 },
                                 "addressPrefix": "[cidrSubnet(parameters('spoke2AddressPrefix'),24,10)]"
-                            }
-                        },
-                        {
-                            "type": "Microsoft.Network/virtualNetworks/subnets",
-                            "apiVersion": "2022-11-01",
-                            "name": "[concat(parameters('hubVnetName'), '/', parameters('appGWSubnetName'))]",
-                            "properties": {
-                                "routeTable": {
-                                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('appGWRT'))]"
-                                },
-                                "addressPrefix": "[cidrSubnet(parameters('hubAddressPrefix'),24,3)]"
                             }
                         }
                     ],

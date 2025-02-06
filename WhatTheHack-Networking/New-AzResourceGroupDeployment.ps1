@@ -8,6 +8,7 @@ $gwconn = "./VNetGatewayConnection.json"
 $fw = "./Firewall.json"
 $fwpol = "./FirewallPolicy.json"
 $rt = "./RouteTables.json"
+$ag = "./AppGateway.json"
 
 $storageName = read-host -prompt "Enter Storage Account Name"
 $scriptURL = "https://$storageName.blob.core.windows.net/scripts/IIS.ps1"
@@ -23,9 +24,10 @@ New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetgw
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $gwconn -vaultName $vaultname
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetpeer
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $rt
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $fwpol -policyName $firewallPolicyName
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $fw -firewallName $firewallName -firewallPolicyName $firewallPolicyName -asJob
+New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $fw -firewallName $firewallName -firewallPolicyName $firewallPolicyName
+New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $ag
+New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $rt
 
 
 

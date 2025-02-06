@@ -2,26 +2,62 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "applicationGateways_app_gw_name": {
+        "app_gw_name": {
             "defaultValue": "app-gw",
             "type": "String"
         },
-        "virtualNetworks_hub_vnet_externalid": {
-            "defaultValue": "/subscriptions/4f6a6eb9-27d0-4ed6-a31c-2bde135e2db6/resourceGroups/rg_sb_eastus_251794_1_173874849427/providers/Microsoft.Network/virtualNetworks/hub-vnet",
+        "hub_vnet_name": {
+            "defaultValue": "hub-vnet",
             "type": "String"
         },
-        "publicIPAddresses_app_gw_pip_externalid": {
-            "defaultValue": "/subscriptions/4f6a6eb9-27d0-4ed6-a31c-2bde135e2db6/resourceGroups/rg_sb_eastus_251794_1_173874849427/providers/Microsoft.Network/publicIPAddresses/app-gw-pip",
-            "type": "String"
+        "app_gw_subnet_name": {
+            "type": "string",
+            "defaultValue": "app-gw-subnet"
+        },
+        "app-gw-pip": {
+            "type": "string",
+            "defaultValue": "app-gw-pip"
+        },
+        "hub_vm_priv_ip": {
+            "type": "string",
+            "defaultValue": "10.0.10.4"
+        },
+        "spoke1_vm_priv_ip": {
+            "type": "string",
+            "defaultValue": "10.1.10.4"
+        },
+        "spoke2_vm_priv_ip": {
+            "type": "string",
+            "defaultValue": "10.2.10.4"
         }
     },
     "variables": {},
     "resources": [
         {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2024-03-01",
+            "name": "[parameters('app-gw-pip')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4",
+                "dnsSettings": {
+                    "domainNameLabel": "az-app-gw-1000"
+                }
+            },
+            "zones": [ "1" ]
+        },
+        {
             "type": "Microsoft.Network/applicationGateways",
             "apiVersion": "2024-03-01",
-            "name": "[parameters('applicationGateways_app_gw_name')]",
-            "location": "eastus",
+            "name": "[parameters('app_gw_name')]",
+            "dependsOn": [
+                "[parameters('app-gw-pip')]"
+            ],
+            "location": "[resourceGroup().location]",
             "zones": [
                 "1"
             ],
@@ -35,37 +71,33 @@
                 "gatewayIPConfigurations": [
                     {
                         "name": "appGatewayIpConfig",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/gatewayIPConfigurations/appGatewayIpConfig')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/gatewayIPConfigurations/appGatewayIpConfig')]",
                         "properties": {
                             "subnet": {
-                                "id": "[concat(parameters('virtualNetworks_hub_vnet_externalid'), concat('/subnets/', parameters('applicationGateways_app_gw_name'), '-subnet'))]"
+                                "id": "[concat(resourceId('Microsoft.Network/VirtualNetworks/',parameters('hub_vnet_name')), concat('/subnets/', parameters('app_gw_subnet_name')))]"
                             }
                         }
                     }
                 ],
-                "sslCertificates": [],
-                "trustedRootCertificates": [],
-                "trustedClientCertificates": [],
-                "sslProfiles": [],
                 "frontendIPConfigurations": [
                     {
                         "name": "appGwPublicFrontendIpIPv4",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/frontendIPConfigurations/appGwPublicFrontendIpIPv4')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/frontendIPConfigurations/appGwPublicFrontendIpIPv4')]",
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIPAddress": {
-                                "id": "[parameters('publicIPAddresses_app_gw_pip_externalid')]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('app-gw-pip'))]"
                             }
                         }
                     },
                     {
                         "name": "appGwPrivateFrontendIpIPv4",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/frontendIPConfigurations/appGwPrivateFrontendIpIPv4')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/frontendIPConfigurations/appGwPrivateFrontendIpIPv4')]",
                         "properties": {
                             "privateIPAddress": "10.0.3.4",
                             "privateIPAllocationMethod": "Static",
                             "subnet": {
-                                "id": "[concat(parameters('virtualNetworks_hub_vnet_externalid'), concat('/subnets/', parameters('applicationGateways_app_gw_name'), '-subnet'))]"
+                                "id": "[concat(resourceId('Microsoft.Network/VirtualNetworks/',parameters('hub_vnet_name')), concat('/subnets/', parameters('app_gw_subnet_name')))]"
                             }
                         }
                     }
@@ -73,7 +105,7 @@
                 "frontendPorts": [
                     {
                         "name": "port_80",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/frontendPorts/port_80')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/frontendPorts/port_80')]",
                         "properties": {
                             "port": 80
                         }
@@ -82,44 +114,43 @@
                 "backendAddressPools": [
                     {
                         "name": "backend-pool",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/backendAddressPools/backend-pool')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/backendAddressPools/backend-pool')]",
                         "properties": {
                             "backendAddresses": [
                                 {
-                                    "ipAddress": "10.0.10.4"
+                                    "ipAddress": "[parameters('hub_vm_priv_ip')]"
                                 },
                                 {
-                                    "ipAddress": "10.1.10.4"
+                                    "ipAddress": "[parameters('spoke1_vm_priv_ip')]"
                                 },
                                 {
-                                    "ipAddress": "10.2.10.4"
+                                    "ipAddress": "[parameters('spoke2_vm_priv_ip')]"
                                 }
                             ]
                         }
                     },
                     {
                         "name": "onprem-backend-pool",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/backendAddressPools/onprem-backend-pool')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/backendAddressPools/onprem-backend-pool')]",
                         "properties": {
                             "backendAddresses": [
                                 {
-                                    "ipAddress": "10.0.10.4"
+                                    "ipAddress": "[parameters('hub_vm_priv_ip')]"
                                 },
                                 {
-                                    "ipAddress": "10.1.10.4"
+                                    "ipAddress": "[parameters('spoke1_vm_priv_ip')]"
                                 },
                                 {
-                                    "ipAddress": "10.2.10.4"
+                                    "ipAddress": "[parameters('spoke2_vm_priv_ip')]"
                                 }
                             ]
                         }
                     }
                 ],
-                "loadDistributionPolicies": [],
                 "backendHttpSettingsCollection": [
                     {
                         "name": "backend-settings",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/backendHttpSettingsCollection/backend-settings')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/backendHttpSettingsCollection/backend-settings')]",
                         "properties": {
                             "port": 80,
                             "protocol": "Http",
@@ -131,7 +162,7 @@
                     },
                     {
                         "name": "onprem-backend-settings",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/backendHttpSettingsCollection/onprem-backend-settings')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/backendHttpSettingsCollection/onprem-backend-settings')]",
                         "properties": {
                             "port": 80,
                             "protocol": "Http",
@@ -142,84 +173,72 @@
                         }
                     }
                 ],
-                "backendSettingsCollection": [],
                 "httpListeners": [
                     {
                         "name": "app-listener",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/httpListeners/app-listener')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/httpListeners/app-listener')]",
                         "properties": {
                             "frontendIPConfiguration": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/frontendIPConfigurations/appGwPublicFrontendIpIPv4')]"
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/frontendIPConfigurations/appGwPublicFrontendIpIPv4')]"
                             },
                             "frontendPort": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/frontendPorts/port_80')]"
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/frontendPorts/port_80')]"
                             },
                             "protocol": "Http",
-                            "hostNames": [],
-                            "requireServerNameIndication": false,
-                            "customErrorConfigurations": []
+                            "requireServerNameIndication": false
                         }
                     },
                     {
                         "name": "onprem-listener",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/httpListeners/onprem-listener')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/httpListeners/onprem-listener')]",
                         "properties": {
                             "frontendIPConfiguration": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/frontendIPConfigurations/appGwPrivateFrontendIpIPv4')]"
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/frontendIPConfigurations/appGwPrivateFrontendIpIPv4')]"
                             },
                             "frontendPort": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/frontendPorts/port_80')]"
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/frontendPorts/port_80')]"
                             },
                             "protocol": "Http",
-                            "hostNames": [],
-                            "requireServerNameIndication": false,
-                            "customErrorConfigurations": []
+                            "requireServerNameIndication": false
                         }
                     }
                 ],
-                "listeners": [],
-                "urlPathMaps": [],
                 "requestRoutingRules": [
                     {
                         "name": "app-settings",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/requestRoutingRules/app-settings')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/requestRoutingRules/app-settings')]",
                         "properties": {
                             "ruleType": "Basic",
                             "priority": 400,
                             "httpListener": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/httpListeners/app-listener')]"
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/httpListeners/app-listener')]"
                             },
                             "backendAddressPool": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/backendAddressPools/backend-pool')]"
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/backendAddressPools/backend-pool')]"
                             },
                             "backendHttpSettings": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/backendHttpSettingsCollection/backend-settings')]"
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/backendHttpSettingsCollection/backend-settings')]"
                             }
                         }
                     },
                     {
                         "name": "onprem-app-settings",
-                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/requestRoutingRules/onprem-app-settings')]",
+                        "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/requestRoutingRules/onprem-app-settings')]",
                         "properties": {
                             "ruleType": "Basic",
                             "priority": 410,
                             "httpListener": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/httpListeners/onprem-listener')]"
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/httpListeners/onprem-listener')]"
                             },
                             "backendAddressPool": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/backendAddressPools/onprem-backend-pool')]"
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/backendAddressPools/onprem-backend-pool')]"
                             },
                             "backendHttpSettings": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('applicationGateways_app_gw_name')), '/backendHttpSettingsCollection/onprem-backend-settings')]"
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('app_gw_name')), '/backendHttpSettingsCollection/onprem-backend-settings')]"
                             }
                         }
                     }
                 ],
-                "routingRules": [],
-                "probes": [],
-                "rewriteRuleSets": [],
-                "redirectConfigurations": [],
-                "privateLinkConfigurations": [],
                 "enableHttp2": true
             }
         }
