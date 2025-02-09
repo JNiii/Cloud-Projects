@@ -1,0 +1,141 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "firewallName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "firewallPolicyName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "virtualNetworkResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "[resourceGroup().name]"
+        },
+        "virtualNetworkName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "hub-vnet"
+        },
+        "firewallsubnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "AzureFirewallSubnet"
+        },
+        "firewallmanagementsubnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "AzureFirewallManagementSubnet"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "copy": {
+                "name": "firewall-pip-copy",
+                "count": 4
+            },
+            "name": "[format('firewall-pip-deployment-{0}', copyIndex())]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2024-07-01",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "variables": {},
+                    "resources": [
+                        {
+                            "name": "[format('az-fw-pip-{0}', copyIndex())]",
+                            "type": "Microsoft.Network/publicIPAddresses",
+                            "apiVersion": "2024-03-01",
+                            "location": "[resourceGroup().location]",
+                            "sku": {
+                                "name": "Standard"
+                            },
+                            "properties": {
+                                "publicIPAllocationMethod": "Static",
+                                "publicIPAddressVersion": "IPv4"
+                            }
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        },
+        {
+            "name": "[parameters('firewallName')]",
+            "type": "Microsoft.Network/azureFirewalls",
+            "apiVersion": "2020-03-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "firewall-pip-copy"
+            ],
+            "properties": {
+                "firewallPolicy": {
+                    "id": "[resourceId('Microsoft.Network/firewallPolicies', parameters('firewallPolicyName'))]"
+                },
+                "managementIpConfiguration": {
+                    "name": "string",
+                    "properties": {
+                        "publicIPAddress": {
+                            "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-0')]"
+                        },
+                        "subnet": {
+                            "id": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('firewallmanagementsubnetName'))]"
+                        }
+                    }
+                },
+                "sku": {
+                    "tier": "Basic"
+                },
+                "ipConfigurations": [
+                    {
+                        "name": "az-fw-pip",
+                        "properties": {
+                            "subnet": {
+                                "id": "[resourceId(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('firewallsubnetName'))]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-1')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "hub-fw-pip",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-2')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "spoke-fw-pip",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-3')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {}
+}
