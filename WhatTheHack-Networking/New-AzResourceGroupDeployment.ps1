@@ -1,3 +1,5 @@
+$rg = Get-AzResourceGroup -location southeastasia
+
 $vnet = "./VirtualNetwork.json"
 $nsg = "./NetworkSecurityGroups.json"
 $vnetgw = "./VNetGateway.json"
@@ -12,7 +14,6 @@ $ag = "./AppGateway.json"
 $user = whoami 
 $user = $user + "@instructorwhizlabs.onmicrosoft.com"
 
-$rg = Get-AzResourceGroup -location eastus
 $storageName = read-host -prompt "Enter Storage Name"
 $kvname = read-host -prompt "Enter Key Vault Name"
 
