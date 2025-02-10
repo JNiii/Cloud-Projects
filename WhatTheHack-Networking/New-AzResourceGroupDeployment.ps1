@@ -65,13 +65,13 @@ Set-AzStorageBlobContent @upload
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $nsg
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnet
 New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vm -vaultName $kvname -storageaccountname $storageName -scriptURL $scriptURL -AsJob
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetgw
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $gwconn -vaultName $kvname
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetpeer
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $fwpol -policyName $firewallPolicyName
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $fw -firewallName $firewallName -firewallPolicyName $firewallPolicyName -asJob
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $ag -asJob
-New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $rt
+#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetgw
+#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $gwconn -vaultName $kvname
+#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $vnetpeer
+#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $fwpol -policyName $firewallPolicyName
+#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $fw -firewallName $firewallName -firewallPolicyName $firewallPolicyName -asJob
+#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $ag -asJob
+#New-AzResourceGroupDeployment -resourceGroup $rg.resourceGroupName -templatefile $rt
 
 
 
