@@ -17,7 +17,7 @@ By completing this project, I have an understanding of the following concepts:
 
 ## Diagrams
 <div style="width:70%; height:auto;">
-  <img src="images/Hub and spoke.png" alt="Diagram">
+  <img src="Images/Hub and spoke.png" alt="Diagram">
 </div>
 
 **Note**: To simulate a simple on-premise network, I've used a separate Azure Virtual Network with a network address of 172.16.0.0/16 and added a connectivity to the cloud network with a network address of 10.0.0.0/8 via Virtual Network Gateway. 
@@ -52,16 +52,16 @@ When triggered, the powershell script first asks for desired variables to be use
 
 ## Screenshots:
 <div style="width:70%; height:auto;">
-  <img src="images/onprem-rdp-to-hub-and-spokes.png" alt="onprem-rdp-to-hub-and-spokes">
+  <img src="Images/onprem-rdp-to-hub-and-spokes.png" alt="onprem-rdp-to-hub-and-spokes">
 </div>
 <div style="width:70%; height:auto;">
-  <img src="images/onprem-vm-curl-to-appgw.png" alt="onprem-vm-curl-to-appgw">
+  <img src="Images/onprem-vm-curl-to-appgw.png" alt="onprem-vm-curl-to-appgw">
 </div>
 <div style="width:70%; height:auto;">
-  <img src="images/local-computer-curl-to-appgw.png" alt="local-computer-curl-to-appgw">
+  <img src="Images/local-computer-curl-to-appgw.png" alt="local-computer-curl-to-appgw">
 </div>
 <div style="width:70%; height:auto;">
-  <img src="images/az-fw-log-data-rdp-http.png" alt="az-fw-log-data-rdp-http">
+  <img src="Images/az-fw-log-data-rdp-http.png" alt="az-fw-log-data-rdp-http">
 </div>
 
 ## What's Next:
