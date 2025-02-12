@@ -31,7 +31,7 @@ By using the sandbox subscription provided, the options are limited and I'm sure
 
 Since I am using a Whizlabs Azure sandbox subscription, I've worked out with the restrictions and limits presented by the sandbox. It is also time limited to just a maximum of 3 hour per session. So, let's say you've created a session with a 3 hour limit, after the limit, all of your resources are now deleted and you're back to square one which drove me to create Azure Resource Manager templates in order to automate and redeploy resources faster. This is deployed via Azure Cloud Shell on each session and triggered by "Hub-Spoke-Deployment.ps1" powershell script.
 
-### Powershell script flow:
+**Powershell script flow**:
 
 <div style="width:70%; height:auto;">
   <img src="Images/hub-and-spoke-ps1-flow.png" alt="hub-and-spoke-ps1-flow">
