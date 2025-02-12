@@ -49,7 +49,7 @@
         {
             "copy": {
                 "name": "firewall-pip-copy",
-                "count": 4
+                "count": 2
             },
             "name": "[format('firewall-pip-deployment-{0}', copyIndex())]",
             "type": "Microsoft.Resources/deployments",
@@ -114,22 +114,6 @@
                             },
                             "publicIPAddress": {
                                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-1')]"
-                            }
-                        }
-                    },
-                    {
-                        "name": "hub-fw-pip",
-                        "properties": {
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-2')]"
-                            }
-                        }
-                    },
-                    {
-                        "name": "spoke-fw-pip",
-                        "properties": {
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'az-fw-pip-3')]"
                             }
                         }
                     }

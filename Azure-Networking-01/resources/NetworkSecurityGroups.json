@@ -52,6 +52,9 @@
                                             "protocol": "Tcp",
                                             "sourcePortRange": "*",
                                             "destinationPortRange": "3389",
+                                            /*
+                                            On the sourceAddressPrefix property, please limit it to your own public IP address to prevent unauthorized access to your "on-premise" virtual machine.
+                                            */
                                             "sourceAddressPrefix": "*",
                                             "destinationAddressPrefix": "*",
                                             "access": "Allow",
@@ -119,7 +122,7 @@
                                             "sourcePortRange": "*",
                                             "destinationPortRange": "3389",
                                             "sourceAddressPrefixes": [
-                                                "[parameters('onpremAddressPrefix')]", 
+                                                "[parameters('onpremAddressPrefix')]",
                                                 "[parameters('hubAddressPrefix')]"
                                             ],
                                             "destinationAddressPrefix": "*",
