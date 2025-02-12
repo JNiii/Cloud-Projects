@@ -17,7 +17,7 @@ By completing this project, I have an understanding of the following concepts:
 
 ## Diagrams
 <div style="width:70%; height:auto;">
-  <img src="Images/Hub and spoke.png" alt="Diagram">
+  <img src="Images/Hub-and-Spoke.png" alt="Diagram">
 </div>
 
 **Note**: To simulate a simple on-premise network, I've used a separate Azure Virtual Network with a network address of 172.16.0.0/16 and added a connectivity to the cloud network with a network address of 10.0.0.0/8 via Virtual Network Gateway. 
