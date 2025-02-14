@@ -28,7 +28,7 @@ This simulates Site-to-Site (S2S) connectivity between the two network deploymen
 ## Further Details
 **Azure-Networking-01** project aims to engage into an increasingly complex Azure Virtual Network setup and starts with a deep dive in hub and spoke networking and user-defined routes, and then goes on by adding components such as the Azure Application Gateway, and Azure Firewall.
 
-Since I am using a Whizlabs Azure Sandbox subscription, it is time limited to just a maximum of 3 hour per session. So, let's say you've created a session with a 3 hour limit, after the limit, all of your resources are now deleted and you're back to square one which drove me to create Azure Resource Manager templates in order to automate and redeploy resources faster. ARM templates are deployed via Azure Cloud Shell on each session by using "Hub-Spoke-Deployment.ps1" powershell script.
+Since I am using a Whizlabs Azure Sandbox subscription, it is time limited to just a maximum of 3 hour per session. So, let's say you've created a session with a 3 hour limit, after the limit, all of the resources will be deleted. This behaviour drove me to learn and create Azure Resource Manager (ARM) templates in order to automate and redeploy resources faster. ARM templates and Powershell scripts are uploaded to Azure Cloud Shell on each session. ARM templates are then deployed by using "Hub-Spoke-Deployment.ps1" powershell script.
 
 **Powershell script flow**:
 
@@ -36,7 +36,7 @@ Since I am using a Whizlabs Azure Sandbox subscription, it is time limited to ju
   <img src="Images/hub-and-spoke-ps1-flow.png" alt="hub-and-spoke-ps1-flow">
 </div>
 
-When triggered, the powershell script first asks for desired variables to be used i.e. storage account name, keyvault name, local admin password (used on Virtual Machines), firewall policy name, and firewall name. It would then upload the custom script extension file ("IIS.ps1") which is used to download and run scripts on Azure VMs upon creation. After that, it will now deploy ARM template for Azure Key Vault creation ("KeyVault.json"). After the Key Vault is created, the script will now add a role (in this case, the role is Key Vault Administrator but please use least privilege principle) to the user and create "secrets" used to configure VMs and Virtual Network Gateway connection. It will now then proceed with resource creation as follows:
+When triggered, the powershell script first asks for desired variables to be used i.e. storage account name, keyvault name, local admin password (used on Virtual Machines), firewall policy name, and firewall name. It would then upload the custom script extension file ("[IIS.ps1](Powershell_Scripts/IIS.ps1)") which is used to download and run scripts on Azure VMs upon creation. After that, it will now deploy ARM template for Azure Key Vault creation ("[KeyVault.json](Resources/KeyVault.json)"). After the Key Vault is created, the script will now add a role (in this case, the role is Key Vault Administrator but please use least privilege principle) to the user and create "secrets" used to configure VMs and Virtual Network Gateway connection. It will now then proceed with resource creation as follows:
 
 1. Network Security Group
 2. Virtual Networks and Subnets
